@@ -1,9 +1,31 @@
-# matui
+# nerve
 
 A premium Matrix TUI client, written in Python, designed as a solid
 daily replacement for gomuks terminal / iamb.
 
 **Stack** : [`matrix-nio`](https://github.com/matrix-nio/matrix-nio) (Matrix SDK, E2EE via libolm) + [`Textual`](https://textual.textualize.io/) (modern TUI framework).
+
+## Migrating from `matui`?
+
+If you already used the client under its former name `matui`, your session
+(credentials, keyring secrets, E2EE store) lives under the old technical
+identifiers and must be migrated once:
+
+```bash
+# 1. Copie ~/.config/matui -> ~/.config/nerve + réécrit les secrets
+#    keyring sous le service 'nerve' (mêmes clés/valeurs). Non destructif.
+python scripts/migrate_matui_to_nerve.py
+
+# 2. Vérifie l'état (dossiers + keyring 'matui'/'nerve')
+python scripts/migrate_matui_to_nerve.py --status
+
+# 3. Une fois la session migrée validée (nerve démarre sans re-login),
+#    purge l'ancienne identité — DESTRUCTIF
+python scripts/migrate_matui_to_nerve.py --force-delete-old
+```
+
+The script is one-shot and idempotent; it never deletes the old config or
+keyring entry without an explicit `--force-delete-old`.
 
 ## Why this instead of gomuks terminal
 
@@ -14,7 +36,7 @@ daily replacement for gomuks terminal / iamb.
 ## Installation
 
 ```bash
-cd matui
+cd nerve
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e .
@@ -29,13 +51,13 @@ sudo pacman -S libolm
 ## Run
 
 ```bash
-matui
+nerve
 ```
 
-On first launch, a login screen asks for your homeserver, user ID and password. An `access_token` is then saved in `~/.config/matui/credentials.json` (permissions `600`) — later launches go straight to the chat interface.
+On first launch, a login screen asks for your homeserver, user ID and password. An `access_token` is then saved in `~/.config/nerve/credentials.json` (permissions `600`) — later launches go straight to the chat interface.
 
-Each launch starts with a hacking-scene splash banner: `MATUI` rendered in the
-`slant` figlet font with a rainbow gradient sweep (pyfiglet, no system `figlet`/
+Each launch starts with a minimal splash banner: `NERVE` rendered in the
+`slant` figlet font with a theme-driven gradient (pyfiglet, no system `figlet`/
 `lolcat` needed), then auto-advances to login or chat after ~2s (`enter` / `esc`
 to skip).
 
@@ -64,7 +86,7 @@ Available commands:
 - Navigation : focus rooms / focus composer (suggested), toggle sidebar (`Ctrl+D`)
 - Chat : clear screen (`Ctrl+K`), mark as read, join a room (`#alias` prompt in a dialog)
 - Action : insert `/sendimg`, open the room's last link
-- System : sync status, switch theme, log out (back to login), quit matui (`Ctrl+Q`)
+- System : sync status, switch theme, log out (back to login), quit nerve (`Ctrl+Q`)
 
 ## Sidebar (context panel)
 
@@ -87,10 +109,10 @@ command in the palette / `Ctrl+P` → System):
 - **opencode** — the default, warm dark tones (accent `#e59e72`).
 - **matrix_green** — deep green (accent `#50fa7b`).
 
-The choice is persisted in `~/.config/matui/config.json` and re-applied at
+The choice is persisted in `~/.config/nerve/config.json` and re-applied at
 every launch (login, chat and palette all follow the active theme). All CSS
 colors in `app.tcss` come from theme variables, so adding a new theme only
-means appending an entry to `src/matui/themes.py`.
+means appending an entry to `src/nerve/themes.py`.
 
 ## Premium interface
 
@@ -111,7 +133,7 @@ means appending an entry to `src/matui/themes.py`.
 - **Human confirmation of invitations**: a room is never joined automatically — a dialog requires Accept/Decline.
 - Access token stored in the **system keyring**, never in plaintext in `credentials.json`.
 - **E2EE store encrypted at rest**: olm/megolm session keys are Fernet-encrypted (key in the keyring) as soon as the app closes.
-- **Session recovery key** (`/recovery`): the store key is exposed as a shareable secret so the session (E2EE history) can be restored on a new machine or after the keyring is wiped. Only a scrypt verifier of the key is stored on disk — never the key itself. On startup, if the keyring key is missing, matui asks for the recovery key instead of failing.
+- **Session recovery key** (`/recovery`): the store key is exposed as a shareable secret so the session (E2EE history) can be restored on a new machine or after the keyring is wiped. Only a scrypt verifier of the key is stored on disk — never the key itself. On startup, if the keyring key is missing, nerve asks for the recovery key instead of failing.
 - **Command palette** (`Ctrl+P`) and **clean logout**: the token is revoked server-side, then local credentials and the store are deleted.
 
 ## Roadmap to "real" premium
@@ -122,10 +144,10 @@ In the order I'd recommend tackling it:
 2. **Desktop notifications** — via `notify-send` or a lib like `plyer`, triggered from `_handle_message` when the room isn't active.
 3. **Unread indicators** per room in the list.
 4. **Username/room completion** in the composer.
-5. **Multi-account** — `MatuiClient` is already decoupled from the UI, so running several instances in parallel is possible.
+5. **Multi-account** — `NerveClient` is already decoupled from the UI, so running several instances in parallel is possible.
 
 ## Security — good to know
 
 - The access token and store key live in the system keyring. On systems without a keyring daemon (e.g. headless server), keyring falls back to one of the weaker backends: configure a real keyring (Secret Service / keychain) for actual protection.
-- If the store is corrupted (e.g. after a crash during end-of-session encryption), delete `~/.config/matui/store`: devices stay valid, only non-re-synced history is lost.
-- To restore a session anywhere, run `/recovery` once and save the shown key offline. On a new machine or after the keyring is wiped, matui will detect the encrypted store and ask for that key before loading the chat.
+- If the store is corrupted (e.g. after a crash during end-of-session encryption), delete `~/.config/nerve/store`: devices stay valid, only non-re-synced history is lost.
+- To restore a session anywhere, run `/recovery` once and save the shown key offline. On a new machine or after the keyring is wiped, nerve will detect the encrypted store and ask for that key before loading the chat.
