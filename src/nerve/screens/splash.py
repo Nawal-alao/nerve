@@ -31,11 +31,12 @@ def _to_rgb(hex_color: str, fallback: tuple[int, int, int]) -> tuple[int, int, i
 
 
 def _splash_art() -> Text:
-    """Bannière 'NERVE' en fonte slant, dégradé de thème (muted → primary)."""
+    """Bannière 'NERVE' en fonte smslant (légèrement réduite vs slant),
+    dégradé de thème (muted → primary)."""
     spec = themes.spec()
     start = _to_rgb(spec.muted, (85, 85, 85))
     end = _to_rgb(spec.primary, (229, 158, 114))
-    art = Figlet(font="slant").renderText("NERVE").rstrip("\n")
+    art = Figlet(font="smslant").renderText("NERVE").rstrip("\n")
     lines = art.split("\n")
     total = sum(len(line) for line in lines)
     out = Text()
@@ -66,8 +67,7 @@ class SplashScreen(Screen):
         with Vertical(id="splash-wrap"):
             yield Static(_splash_art(), id="splash-art")
             yield Static("secure · private · minimal", id="splash-sub")
-            yield Static("nerve // encrypted", id="splash-detail")
-            yield Static("[dim]enter / esc to skip[/dim]", id="splash-hint")
+            yield Static("enter   continue\nesc     skip", id="splash-hint")
 
     def on_mount(self) -> None:
         self.set_timer(2.4, self._launch)
