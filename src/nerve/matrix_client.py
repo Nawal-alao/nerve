@@ -1,4 +1,4 @@
-"""Fine couche au-dessus de matrix-nio pour matui.
+"""Fine couche au-dessus de matrix-nio pour nerve.
 
 Cette classe centralise tout ce qui touche au protocole Matrix : connexion,
 sync loop, envoi de messages, gestion basique du chiffrement (E2EE) et

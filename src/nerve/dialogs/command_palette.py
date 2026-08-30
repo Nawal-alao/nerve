@@ -119,7 +119,7 @@ COMMANDS: list[CommandEntry] = [
     ),
     CommandEntry(
         "quit",
-        "Quit matui",
+        "Quit nerve",
         "Close the application",
         "ctrl+q",
         "System",

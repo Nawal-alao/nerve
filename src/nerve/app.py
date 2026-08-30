@@ -1,4 +1,4 @@
-"""Interface Textual de matui.
+"""Interface Textual de nerve.
 
 Ce module assemble l'application : `NerveApp` (app Textual principale) et
 le point d'entrée `run()`. Les écrans, dialogues et helpers ont été extraits

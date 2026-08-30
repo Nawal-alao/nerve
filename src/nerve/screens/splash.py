@@ -1,4 +1,4 @@
-"""Splash screen — bannière : "MATUI" en fonte _slant, dégradé de thème
+"""Splash screen — bannière : "NERVE" en fonte _slant, dégradé de thème
 sobre (muted → primary), auto-transition vers login/chat."""
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ def _to_rgb(hex_color: str, fallback: tuple[int, int, int]) -> tuple[int, int, i
 
 
 def _splash_art() -> Text:
-    """Bannière 'MATUI' en fonte slant, dégradé de thème (muted → primary)."""
+    """Bannière 'NERVE' en fonte slant, dégradé de thème (muted → primary)."""
     spec = themes.spec()
     start = _to_rgb(spec.muted, (85, 85, 85))
     end = _to_rgb(spec.primary, (229, 158, 114))

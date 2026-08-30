@@ -48,7 +48,7 @@ class LoginScreen(Screen):
                 yield Button("Sign in", id="login-button", variant="primary")
                 yield Label("", id="login-status")
             yield Label(
-                "Your credentials stay in ~/.config/matui (0600 permissions).",
+                "Your credentials stay in ~/.config/nerve (0600 permissions).",
                 id="login-hint",
             )
         yield Footer()
