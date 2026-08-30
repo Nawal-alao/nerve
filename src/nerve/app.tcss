@@ -342,8 +342,11 @@ ToastRack {
 
 /* -- Splash screen (bannière NERVE au lancement) ------------------------ */
 /* Composition : LOGO → tagline → hint clavier, hiérarchie stricte, large
-   espace négatif. Le groupe est remonté au-dessus du centre (asymétrie) en
-   réservant de la marge sous le hint. */
+   espace négatif. #splash-wrap occupe tout l'écran : le groupe
+   (#splash-group, 1fr) reste parfaitement centré sur l'écran pendant que
+   #splash-detail est plié en bas-gauche — aucun décantage du logo. Le
+   groupe est remonté au-dessus du centre (asymétrie) via la marge basse
+   du hint. */
 
 SplashScreen {
     background: $bg;
@@ -351,10 +354,14 @@ SplashScreen {
 }
 
 #splash-wrap {
+    width: 100%;
+    height: 100%;
+}
+
+#splash-group {
+    width: 100%;
+    height: 1fr;
     align: center middle;
-    width: auto;
-    height: auto;
-    padding: 0 4;
 }
 
 #splash-art {
@@ -376,6 +383,16 @@ SplashScreen {
     text-style: dim;
     margin-top: 6;
     margin-bottom: 5;
+}
+
+/* Micro-détail technique discret, plié en bas-gauche (hors du flux
+   centré : jamais en concurrence visuelle avec le logo). */
+#splash-detail {
+    width: auto;
+    height: auto;
+    color: $muted;
+    text-style: dim;
+    margin-left: 1;
 }
 
 /* -- Sidebar droite (panneaux contextuels Room / Session) -------------- */
