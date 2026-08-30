@@ -16,6 +16,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Input, Label, ListItem, ListView, Static
 
 from .. import themes
+from .join_room import JoinRoomDialog
 
 
 class CommandEntry(NamedTuple):
@@ -307,9 +308,8 @@ class CommandPalette(ModalScreen[None]):
         async def _go() -> None:
             # Imports différés : entre classes encore logées dans app.py et
             # modules pas encore extraits, ces imports restent locaux jusqu'à
-            # ce que les étapes 5, 6 et 12 sortent leurs modules (cf. NOTES.md).
+            # ce que les étapes 6 et 12 sortent leurs modules (cf. NOTES.md).
             from ..app import ChatScreen
-            from .join_room import JoinRoomDialog
             from .recovery import RecoveryDialog
             app = self.app
             if cmd_id == "quit":
