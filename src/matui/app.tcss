@@ -40,6 +40,56 @@ Footer .footer-key--description {
 }
 
 /* =====================================================================
+   Boutons — style plat unifié, cohérent avec le composer (_SendButton)
+   Base : sans bordure ni gras, surface au repos / hover au survol.
+   Classes d'intention :
+     Button.-primary → fond $primary, texte $accent_text, gras (action de
+                       confirmation/acceptation).
+     Button.-danger  → fond transparent, texte $error, barre gauche vkey
+                       $error (action destructrice / annulation à risque).
+   Les boutons neutres (Cancel/Close) gardent la classe par défaut, sans
+   classe d'intention : base sobre uniquement.
+   ===================================================================== */
+
+Button {
+    border: none;
+    background: $surface;
+    color: $text;
+    text-style: not bold;
+    padding: 0 2;
+    min-width: 14;
+    height: 3;
+}
+
+Button:hover {
+    background: $hover;
+}
+
+Button:focus {
+    background: $hover;
+}
+
+Button.-primary {
+    background: $primary;
+    color: $accent_text;
+    text-style: bold;
+}
+
+Button.-primary:hover {
+    background: $primary;
+}
+
+Button.-danger {
+    background: transparent;
+    color: $error;
+    border-left: vkey $error;
+}
+
+Button.-danger:hover {
+    background: $hover;
+}
+
+/* =====================================================================
    Notifications (toasts) — plats, petite bordure gauche 1px, auto-expire
    ===================================================================== */
 
