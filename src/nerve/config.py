@@ -15,14 +15,14 @@ from pathlib import Path
 import keyring
 from cryptography.fernet import Fernet, InvalidToken
 
-CONFIG_DIR = Path.home() / ".config" / "matui"
+CONFIG_DIR = Path.home() / ".config" / "nerve"
 CREDENTIALS_FILE = CONFIG_DIR / "credentials.json"
 STORE_DIR = CONFIG_DIR / "store"
 # Vérificateur (scrypt) de la clé de récupération : permet de reconnaître la
 # clé sur une machine neuve, sans stocker la clé elle-même.
 RECOVERY_FILE = CONFIG_DIR / "recovery.json"
 
-KEYRING_SERVICE = "matui"
+KEYRING_SERVICE = "nerve"
 # Clé du trousseau contenant le token d'accès. Le token est un secret au même
 # titre qu'un mot de passe : on le conserve dans le trousseau système, jamais
 # en clair sur le disque.
@@ -31,7 +31,7 @@ _USERNAME_ACCESS_TOKEN = "access_token"
 # Clé du trousseau contenant la clé Fernet qui chiffre le store olm au repos.
 _USERNAME_STORE_KEY = "store_key"
 # Marqueur présent uniquement quand le store est chiffré.
-STORE_ENC_MARKER = STORE_DIR / ".matui-encrypted"
+STORE_ENC_MARKER = STORE_DIR / ".nerve-encrypted"
 
 
 class StoreLockedError(RuntimeError):
