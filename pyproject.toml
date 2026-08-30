@@ -1,5 +1,5 @@
 [project]
-name = "matui"
+name = "nerve"
 version = "0.1.0"
 description = "Un client Matrix TUI premium, en Python, basé sur matrix-nio + Textual."
 requires-python = ">=3.10"
@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-matui = "matui.app:run"
+nerve = "nerve.app:run"
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]
