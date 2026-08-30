@@ -98,8 +98,23 @@ class SplashScreen(Screen):
             yield Static("nerve // encrypted", id="splash-detail")
 
     def on_mount(self) -> None:
+        self._adapt_layout()
         self._animate_logo()
         self.set_timer(_AUTO_MS, self._launch)
+
+    def _adapt_layout(self) -> None:
+        """Adaptation discrète aux petits terminaux : le CSS Textual n'a pas
+        de media queries, on bascule donc des classes compacts en Python.
+
+        Le bloc complet (logo + tagline + hint + marges) tient en 16 lignes ;
+        en dessous on serre d'abord le hint ('splash-squeeze', 14-15 lignes),
+        puis on le masque et resserre la tagline ('splash-tiny', < 14)."""
+        h = self.size.height
+        if h >= 16:
+            return
+        self.add_class("-splash-squeeze")
+        if h < 14:
+            self.add_class("-splash-tiny")
 
     def _animate_logo(self) -> None:
         """Fondu d'apparition du logo, puis enchaîne la frappe de la tagline.

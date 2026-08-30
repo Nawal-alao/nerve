@@ -395,6 +395,22 @@ SplashScreen {
     margin-left: 1;
 }
 
+/* Petits terminaux (pas de media queries en CSS Textual) : le SplashScreen
+   bascule ces classes en Python selon la hauteur. 'splash-squeeze' resserre
+   les marges (14-15 lignes), 'splash-tiny' masque le hint (< 14 lignes). */
+.-splash-squeeze #splash-sub, .-splash-tiny #splash-sub {
+    margin-top: 1;
+}
+
+.-splash-squeeze #splash-hint {
+    margin-top: 2;
+    margin-bottom: 1;
+}
+
+.-splash-tiny #splash-hint {
+    display: none;
+}
+
 /* -- Sidebar droite (panneaux contextuels Room / Session) -------------- */
 
 #sidebar {
