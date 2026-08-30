@@ -1,0 +1,27 @@
+# Environnement Python
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build et paquets
+build/
+dist/
+*.egg-info/
+*.egg
+wheels/
+
+# Données sensibles / locales (jamais de token ni de clé en clair)
+.env
+*.env
+!*.env.example
+credentials.json
+recovery.json
+
+# Éditeurs / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Artefacts de dev / captures d'écran
+*.svg
