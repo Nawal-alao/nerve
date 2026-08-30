@@ -1,0 +1,23 @@
+[project]
+name = "matui"
+version = "0.1.0"
+description = "Un client Matrix TUI premium, en Python, basé sur matrix-nio + Textual."
+requires-python = ">=3.10"
+dependencies = [
+    "matrix-nio[e2e]>=0.25.2",
+    "textual>=0.60.0",
+    "python-dotenv>=1.0.0",
+    "keyring>=25.0.0",
+    "cryptography>=42.0.0",
+    "pyfiglet>=1.0.0",
+]
+
+[project.scripts]
+matui = "matui.app:run"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
