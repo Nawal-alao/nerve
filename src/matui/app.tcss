@@ -568,7 +568,7 @@ CommandPalette {
     width: 56;
     max-width: 94%;
     height: auto;
-    border: solid $border;
+    border: $modal_border;
     background: $surface;
     padding: 1 2 1 2;
 }
@@ -614,7 +614,7 @@ SasDialog {
     width: 56;
     max-width: 94%;
     height: auto;
-    border: solid $border;
+    border: $modal_border;
     background: $surface;
     padding: 1 2;
 }
@@ -671,7 +671,7 @@ InviteDialog {
     width: 60;
     max-width: 94%;
     height: auto;
-    border: solid $border;
+    border: $modal_border;
     background: $surface;
     padding: 1 2;
 }
@@ -723,7 +723,7 @@ StoreUnlockDialog {
     width: 64;
     max-width: 94%;
     height: auto;
-    border: solid $border;
+    border: $modal_border;
     background: $surface;
     padding: 1 2;
 }
@@ -765,7 +765,7 @@ StoreUnlockDialog {
     width: 64;
     max-width: 94%;
     height: auto;
-    border: solid $border;
+    border: $modal_border;
     background: $surface;
     padding: 1 2;
 }
