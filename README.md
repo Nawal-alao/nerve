@@ -57,9 +57,10 @@ nerve
 On first launch, a login screen asks for your homeserver, user ID and password. An `access_token` is then saved in `~/.config/nerve/credentials.json` (permissions `600`) — later launches go straight to the chat interface.
 
 Each launch starts with a minimal splash banner: `NERVE` rendered in the
-`slant` figlet font with a theme-driven gradient (pyfiglet, no system `figlet`/
-`lolcat` needed), then auto-advances to login or chat after ~2s (`enter` / `esc`
-to skip).
+`smslant` figlet font with a theme-driven gradient (pyfiglet, no system
+`figlet`/`lolcat` needed), a discreet fade-in, a typing tagline and a subtle
+terminal cursor, then auto-advances to login or chat after ~3s (`enter` /
+`esc` to skip anytime).
 
 ## Shortcuts (current state)
 
