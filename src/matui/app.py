@@ -11,11 +11,8 @@ Deux écrans :
 from __future__ import annotations
 
 import asyncio
-import hashlib
-import re
 import time
 import webbrowser
-from datetime import datetime
 from typing import NamedTuple
 
 from nio import MatrixRoom, RoomMessageText
@@ -65,19 +62,18 @@ from .config import (
     remove_store,
     reveal_recovery_secret,
 )
+from .formatting import (
+    _URL_RE,
+    _format_time,
+    _fuzzy_score,
+    _inline_markdown,
+    _sender_color,
+)
 from .matrix_client import MatuiClient
 
 # ---------------------------------------------------------------------------
 # Aides de rendu (timeline)
 # ---------------------------------------------------------------------------
-
-# Palette des couleurs de sender : une couleur stable par identifiant,
-# dérivée par hachage, pour que chaque personne garde toujours la sienne.
-# (Pastels lisibles sur fond sombre, dans la famille du thème opencode.)
-SENDER_COLORS = [
-    "#a2d399", "#ffb4ab", "#ffd8a8", "#9ec3ff", "#c1ffb1",
-    "#f0b8e0", "#baccb3", "#ffe58f", "#8cd8c8", "#d0d8ff",
-]
 
 # Correspondance état de sync → (libellé, couleur) pour le header.
 SYNC_LABELS = {
@@ -89,18 +85,11 @@ SYNC_LABELS = {
 
 # Les couleurs markup (ACCENT/DANGER) suivent le thème actif : elles sont
 # re-évaluées à chaque bascule de thème par _apply_theme_globals().
+# Après le découpage en modules, les consommateurs lisent themes.accent()
+# et themes.danger() directement (cf. NOTES.md). Les globals restent ici
+# maintenues par MatuiApp mais n'ont plus d'utilisation.
 ACCENT = "a2d399"
 DANGER = "ffb4ab"
-
-_CODE_SPAN = re.compile(r"`([^`\n]+?)`")
-_BOLD_SPAN = re.compile(r"\*\*([^*\n]+?)\*\*")
-_ITALIC_SPAN = re.compile(r"(?<!\*)\*([^*\n]+?)\*(?!\*)")
-_URL_RE = re.compile(r"https?://[^\s<>\"']+|www\.[^\s<>\"']+")
-
-
-def _sender_color(sender: str) -> str:
-    digest = hashlib.md5(sender.encode("utf-8")).hexdigest()
-    return SENDER_COLORS[int(digest[:8], 16) % len(SENDER_COLORS)]
 
 
 def _apply_theme_globals() -> None:
@@ -110,27 +99,7 @@ def _apply_theme_globals() -> None:
     DANGER = themes.danger()
 
 
-def _inline_markdown(body: str) -> str:
-    """Convertit le markdown inline le plus courant en markup Rich.
-
-    Le corps est d'abord échappé (les crochets restent littéraux) puis on
-    réinjecte du markup pour le code, le gras et l'italique.
-    """
-    text = escape(body)
-    code = themes.accent()
-    text = _CODE_SPAN.sub(lambda m: f"[{code}]{m.group(1)}[/{code}]", text)
-    text = _BOLD_SPAN.sub(r"[bold]\1[/bold]", text)
-    text = _ITALIC_SPAN.sub(r"[italic]\1[/italic]", text)
-    return text
-
-
 _apply_theme_globals()
-
-
-def _format_time(timestamp_ms: int | None) -> str:
-    if not timestamp_ms:
-        return ""
-    return datetime.fromtimestamp(timestamp_ms / 1000).strftime("%H:%M")
 
 
 # ---------------------------------------------------------------------------
@@ -240,30 +209,6 @@ def _sidebar_session_markup(
         age = max(0, int(now - refresh_time))
         lines.append(f"[{m}]Refresh[/{m}]  [{m}]{age}s ago[/{m}]")
     return "\n".join(lines)
-
-
-def _fuzzy_score(query: str, candidate: str) -> float:
-    """Score de correspondance floue (sous-séquence ordonnée).
-
-    Renvoie un score >= 0 si `query` apparaît en sous-séquence dans
-    `candidate` (insensible à la casse), -1 sinon. Bonus pour les lettres
-    consécutives et un préfixe exact, type fzf.
-    """
-    q = query.casefold()
-    c = candidate.casefold()
-    if not q:
-        return 0.0
-    score = 0.0
-    prev = -1
-    for ch in q:
-        pos = c.find(ch, prev + 1)
-        if pos == -1:
-            return -1.0
-        score += 1.5 if pos == prev + 1 else 0.4
-        prev = pos
-    if c.startswith(q):
-        score += 5.0
-    return score
 
 
 # ---------------------------------------------------------------------------
