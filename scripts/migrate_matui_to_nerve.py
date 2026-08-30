@@ -151,10 +151,14 @@ def _delete_old() -> None:
     if ans not in ("y", "yes"):
         print("Annulé — rien n'a été supprimé.")
         return
+    # Les usernames keyring sont déduits de credentials.json : on les lit
+    # AVANT de supprimer le dossier, sinon le service 'matui' conserverait
+    # le token d'accès (clé déduite du user_id) en orphelin.
+    users = _keyring_usernames(_load_credentials())
     if OLD_DIR.exists():
         shutil.rmtree(OLD_DIR)
         print(f"[ok] dossier supprimé : {OLD_DIR}")
-    for user in _keyring_usernames(_load_credentials()):
+    for user in users:
         try:
             keyring.delete_password(OLD_SERVICE, user)
             print(f"[ok] secret keyring supprimé : '{OLD_SERVICE}/{user}'")
