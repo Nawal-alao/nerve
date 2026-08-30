@@ -12,6 +12,8 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, Static
 
+# ChatScreen/LoginScreen sont extraits dans screens/ (étapes 11-12) ; ils
+# sont importés en haut de module. Le reste des notes : cf. NOTES.md.
 from ..config import (
     Credentials,
     StoreLockedError,
@@ -19,6 +21,8 @@ from ..config import (
     remove_store,
 )
 from ..matrix_client import MatuiClient
+from ..screens.chat import ChatScreen
+from ..screens.login import LoginScreen
 
 
 class StoreUnlockDialog(ModalScreen[None]):
@@ -83,8 +87,6 @@ class StoreUnlockDialog(ModalScreen[None]):
         self.app.call_after_refresh(self._go_chat)
 
     async def _go_chat(self) -> None:
-        from ..app import ChatScreen  # étape 12 → from ..screens.chat
-
         await self.app.push_screen(ChatScreen(self.client))
 
     async def _cancel(self) -> None:
@@ -94,8 +96,6 @@ class StoreUnlockDialog(ModalScreen[None]):
         self.app.call_after_refresh(self._go_login)
 
     async def _go_login(self) -> None:
-        from ..app import LoginScreen  # étape 11 → from ..screens.login
-
         await self.app.switch_screen(LoginScreen())
 
     async def action_cancel(self) -> None:

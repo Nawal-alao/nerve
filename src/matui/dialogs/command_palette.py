@@ -16,6 +16,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Input, Label, ListItem, ListView, Static
 
 from .. import themes
+from ..screens.chat import ChatScreen
 from .join_room import JoinRoomDialog
 from .recovery import RecoveryDialog
 
@@ -307,9 +308,6 @@ class CommandPalette(ModalScreen[None]):
         self.dismiss()
 
         async def _go() -> None:
-            # Import différé : ChatScreen vit encore dans app.py ; il
-            # rejoint screens/chat.py à l'étape 12 (cf. NOTES.md).
-            from ..app import ChatScreen
             app = self.app
             if cmd_id == "quit":
                 app.exit()
