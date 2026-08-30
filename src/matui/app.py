@@ -19,7 +19,6 @@ from nio import MatrixRoom, RoomMessageText
 from pyfiglet import Figlet
 from rich.markup import escape
 from rich.text import Text
-from textual import events
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen, Screen
@@ -35,22 +34,6 @@ from textual.widgets import (
     Static,
 )
 
-
-class _SendButton(Static):
-    """Bouton d'envoi « → » plat : un Static cliquable.
-
-    Un vrai Button Textual impose `line-pad >= 1` et une hauteur minimale de
-    3 lignes, ce qui rend son libellé illisible dans la barre de saisie
-    (hauteur 1). On remplace donc par un Static dont le clic relance le même
-    chemin d'envoi que la touche Entrée.
-    """
-
-    def on_click(self, event: events.Click) -> None:
-        event.stop()
-        screen = self.screen
-        if screen.active_room_id is None:
-            return
-        self.run_worker(screen._dispatch_compose(screen.query_one("#composer", Input)))
 
 from . import themes
 from .config import (
@@ -71,6 +54,7 @@ from .formatting import (
 )
 from .matrix_client import MatuiClient
 from .sidebar import _sidebar_room_markup, _sidebar_session_markup
+from .widgets import _SendButton
 
 # ---------------------------------------------------------------------------
 # Aides de rendu (timeline)
