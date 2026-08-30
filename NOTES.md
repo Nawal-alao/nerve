@@ -37,5 +37,22 @@ formatage de texte et `chat.py` ne peut pas l'importer depuis `app.py`
 - `SENDER_COLORS` : utilisé uniquement par `_sender_color` → `formatting.py`.
 - `SYNC_LABELS` : utilisé uniquement par `ChatScreen` → `screens/chat.py`.
 
+### 4. Imports différés pendant la migration (résolus)
+Pendant le découpage, `CommandPalette`/`StoreUnlockDialog` appelaient
+`ChatScreen`, `JoinRoomDialog`, `RecoveryDialog`, `LoginScreen` encore dans
+`app.py` ; ils utilisaient des imports dans le corps de fonction pour éviter
+tout retour vers `app.py`. Une fois chaque module extrait (étapes 5, 6, 11,
+12), tous ces imports sont repassés en haut de module. `app.py` ne référence
+que des modules "aval" (screens/, dialogs/, config/, matrix_client/) —
+aucun cycle.
+
+## Structure finale (src/matui/)
+- `app.py` : `MatuiApp`, `_apply_theme_globals`, globals `ACCENT`/`DANGER`
+  (maintenus mais sans consommateur), `run()`.
+- `formatting.py`, `sidebar.py`, `widgets.py` : helpers bas niveau, ne
+  dépendent que de `themes` (+ stdlib/rich).
+- `screens/{login,chat,splash}.py`, `dialogs/{command_palette,join_room,
+  recovery,store_unlock,sas,invite}.py` : écrans et dialogues.
+
 ## Bugs repérés pendant le refactor (à traiter séparément)
 - (aucun pour l'instant)
