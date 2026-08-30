@@ -153,6 +153,7 @@ class CommandPalette(ModalScreen[None]):
     async def on_mount(self) -> None:
         self.query_one("#cp-input", Input).focus()
         self._rows: list[CommandEntry | str] = []
+        self._pop_lock = asyncio.Lock()
         await self._populate()
 
     async def on_input_changed(self, event: Input.Changed) -> None:
@@ -226,32 +227,50 @@ class CommandPalette(ModalScreen[None]):
                 return i
         return 0
 
-    async def _populate(self) -> None:
-        q = self._query()
-        if q:
-            self._rows = list(self._matching(q))
-        else:
-            self._rows = self._grouped(self._matching(""))
+    def _fit_list(self) -> None:
         lv = self.query_one("#cp-list", ListView)
-        empty = self.query_one("#cp-empty", Static)
-        if not any(self._rows):
-            empty.update(
-                f"No command found for “{q}”" if q else "No command found"
-            )
-            empty.styles.display = "block"
-            lv.styles.display = "none"
+        if lv.styles.display == "none" or not lv.children:
             return
-        empty.styles.display = "none"
-        lv.styles.display = "block"
-        await lv.clear()
-        for entry in self._rows:
-            if isinstance(entry, str):
-                await lv.append(self._build_header(entry))
+        # Le dialogue est plafonné à 70% de l'écran : on borne la liste à ce
+        # qui tient dedans (sinon elle déborde sous le dialogue) et on la
+        # laisse au plus haut de son contenu (pas de vide en dessous).
+        rows = len(lv.children)
+        max_rows = max(3, int(self.size.height * 0.7) - 7)
+        lv.styles.height = min(rows, max_rows)
+
+    async def _populate(self) -> None:
+        # Les frappes rapides lancent des _populate concurrents (Input.Changed
+        # pendant un clear/append). Un verrou les sérialise : _rows et les
+        # enfants de la liste restent cohérents, sinon _move pouvait indexer
+        # hors bornes avec un contenu partiellement remplacé.
+        async with self._pop_lock:
+            q = self._query()
+            if q:
+                self._rows = list(self._matching(q))
             else:
-                item = self._build_row(entry)
-                item.data_id = entry.id  # type: ignore[attr-defined]
-                await lv.append(item)
-        lv.index = self._first_command_index()
+                self._rows = self._grouped(self._matching(""))
+            lv = self.query_one("#cp-list", ListView)
+            empty = self.query_one("#cp-empty", Static)
+            if not any(self._rows):
+                empty.update(
+                    f"No command found for “{q}”" if q else "No command found"
+                )
+                await lv.clear()
+                empty.styles.display = "block"
+                lv.styles.display = "none"
+                return
+            empty.styles.display = "none"
+            lv.styles.display = "block"
+            await lv.clear()
+            for entry in self._rows:
+                if isinstance(entry, str):
+                    await lv.append(self._build_header(entry))
+                else:
+                    item = self._build_row(entry)
+                    item.data_id = entry.id  # type: ignore[attr-defined]
+                    await lv.append(item)
+            lv.index = self._first_command_index()
+            self._fit_list()
 
     def on_list_view_highlighted(self, event: ListView.Highlighted) -> None:
         lv = event.list_view

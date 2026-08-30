@@ -596,7 +596,7 @@ CommandPalette {
 #cp-list {
     background: transparent;
     border: none;
-    height: 1fr;
+    height: auto;
     max-height: 100%;
     scrollbar-size: 1 1;
     scrollbar-color: $border;
