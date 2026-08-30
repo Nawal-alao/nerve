@@ -41,7 +41,7 @@ SendErrorHandler = Callable[[str, str], Awaitable[None]]
 
 
 @dataclass
-class MatuiClient:
+class NerveClient:
     creds: Credentials
     client: AsyncClient = field(init=False)
     _sync_task: asyncio.Task | None = field(init=False, default=None)
@@ -85,7 +85,7 @@ class MatuiClient:
         """
         store_path = str(ensure_store_dir())
         client = AsyncClient(homeserver=homeserver, user=user_id, store_path=store_path)
-        resp = await client.login(password, device_name="matui")
+        resp = await client.login(password, device_name="nerve")
         if not isinstance(resp, LoginResponse):
             await client.close()
             raise RuntimeError(f"Échec de connexion : {resp}")

@@ -10,10 +10,10 @@ from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Input, Label, Rule, Static
 
-from ..matrix_client import MatuiClient
+from ..matrix_client import NerveClient
 
 if TYPE_CHECKING:
-    from ..app import MatuiApp
+    from ..app import NerveApp
 
 
 class LoginScreen(Screen):
@@ -87,7 +87,7 @@ class LoginScreen(Screen):
         self._set_status("")
         self._set_loading(True)
         try:
-            creds = await MatuiClient.login(homeserver, user_id, password)
+            creds = await NerveClient.login(homeserver, user_id, password)
         except Exception as exc:  # noqa: BLE001 — on affiche l'erreur à l'écran
             self._set_status(f"Connection failed: {exc}", kind="error")
             self._set_loading(False)
@@ -95,5 +95,5 @@ class LoginScreen(Screen):
 
         self._set_status("Connected, opening the chat…", kind="success")
         creds.save()
-        app: MatuiApp = self.app  # type: ignore[assignment]
+        app: NerveApp = self.app  # type: ignore[assignment]
         await app.start_chat(creds)

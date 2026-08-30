@@ -26,7 +26,7 @@ from ..formatting import (
     _inline_markdown,
     _sender_color,
 )
-from ..matrix_client import MatuiClient
+from ..matrix_client import NerveClient
 from ..sidebar import _sidebar_room_markup, _sidebar_session_markup
 from ..widgets import _SendButton
 from .login import LoginScreen
@@ -52,7 +52,7 @@ class ChatScreen(Screen):
         ("ctrl+d", "toggle_sidebar", "Sidebar"),
     ]
 
-    def __init__(self, client: MatuiClient) -> None:
+    def __init__(self, client: NerveClient) -> None:
         super().__init__()
         self.client = client
         self.active_room_id: str | None = None
