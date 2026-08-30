@@ -57,6 +57,7 @@ from .widgets import _SendButton
 from .dialogs.command_palette import CommandPalette
 from .dialogs.join_room import JoinRoomDialog
 from .dialogs.recovery import RecoveryDialog
+from .dialogs.sas import SasDialog
 from .dialogs.store_unlock import StoreUnlockDialog
 
 # ---------------------------------------------------------------------------
@@ -676,71 +677,6 @@ class ChatScreen(Screen):
         await self.app.switch_screen(LoginScreen())
 
 
-
-
-# ---------------------------------------------------------------------------
-# Vérification d'appareil par emoji (SAS) — confirmation humaine requise
-# ---------------------------------------------------------------------------
-
-
-class SasDialog(ModalScreen[None]):
-    """Shows the verification emojis and demands a human decision."""
-
-    def __init__(
-        self,
-        client: MatuiClient,
-        transaction_id: str,
-        user_id: str,
-        device_id: str,
-        emojis: list[tuple[str, str]],
-    ) -> None:
-        super().__init__()
-        self.client = client
-        self.transaction_id = transaction_id
-        self.user_id = user_id
-        self.device_id = device_id
-        self.emojis = emojis
-
-    def compose(self) -> ComposeResult:
-        with Vertical(id="sas-dialog"):
-            yield Static("Device verification", id="sas-title")
-            yield Static(
-                f"[dim]{escape(self.user_id)}[/dim] [dim]· device[/dim] "
-                f"[{ACCENT}]{escape(self.device_id)}[/{ACCENT}]",
-                id="sas-device",
-            )
-            yield Static(
-                "Compare these emojis with the ones shown by the other device.",
-                id="sas-hint",
-            )
-            with Vertical(id="sas-emojis"):
-                for emoji, desc in self.emojis:
-                    yield Static(
-                        f"[bold]{escape(emoji)}[/bold]  [dim]{escape(desc)}[/dim]",
-                        classes="sas-emoji",
-                    )
-            with Horizontal(id="sas-actions"):
-                yield Button("Verify", id="sas-confirm", variant="success")
-                yield Button("Reject", id="sas-reject", variant="error")
-                yield Button("Cancel", id="sas-cancel")
-
-    def on_mount(self) -> None:
-        self.query_one("#sas-confirm", Button).focus()
-
-    async def _finish(self) -> None:
-        self.dismiss()
-
-    async def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "sas-confirm":
-            await self.client.confirm_sas(self.transaction_id)
-            self.app.notify("Device verified")
-        elif event.button.id == "sas-reject":
-            await self.client.reject_sas(self.transaction_id)
-            self.app.notify("Verification rejected: the emojis do not match")
-        else:  # sas-cancel
-            await self.client.cancel_sas(self.transaction_id)
-            self.app.notify("Verification cancelled")
-        await self._finish()
 
 
 # ---------------------------------------------------------------------------
