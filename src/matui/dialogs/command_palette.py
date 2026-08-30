@@ -17,6 +17,7 @@ from textual.widgets import Input, Label, ListItem, ListView, Static
 
 from .. import themes
 from .join_room import JoinRoomDialog
+from .recovery import RecoveryDialog
 
 
 class CommandEntry(NamedTuple):
@@ -306,11 +307,9 @@ class CommandPalette(ModalScreen[None]):
         self.dismiss()
 
         async def _go() -> None:
-            # Imports différés : entre classes encore logées dans app.py et
-            # modules pas encore extraits, ces imports restent locaux jusqu'à
-            # ce que les étapes 6 et 12 sortent leurs modules (cf. NOTES.md).
+            # Import différé : ChatScreen vit encore dans app.py ; il
+            # rejoint screens/chat.py à l'étape 12 (cf. NOTES.md).
             from ..app import ChatScreen
-            from .recovery import RecoveryDialog
             app = self.app
             if cmd_id == "quit":
                 app.exit()
