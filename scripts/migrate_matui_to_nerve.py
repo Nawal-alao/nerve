@@ -34,20 +34,19 @@ from pathlib import Path
 
 import keyring
 
-from matui.config import (
-    CONFIG_DIR,
-    RECOVERY_FILE,
-    STORE_ENC_MARKER,
-    STORE_DIR,
-    KEYRING_SERVICE,
-    _USERNAME_ACCESS_TOKEN,
-    _USERNAME_STORE_KEY,
-)
-
+# Identifiants techniques de l'ANCIENNE identité ("matui"). Ce script est
+# un outil one-shot de migration : il référence l'ancien chemin/service
+# explicitement et ne dépend PAS du package (renommé en "nerve") pour être
+# exécutable même après le renommage du codebase.
 OLD_SERVICE = "matui"
 NEW_SERVICE = "nerve"
 OLD_DIR = Path.home() / ".config" / "matui"
 NEW_DIR = Path.home() / ".config" / "nerve"
+
+# Usernames keyring utilisés par l'app : la clé du store (plate) et le
+# token d'accès (sous "<user_id>:access_token").
+_USERNAME_STORE_KEY = "store_key"
+_USERNAME_ACCESS_TOKEN = "access_token"
 
 
 def _keyring_usernames(credentials: dict) -> set[str]:
@@ -72,17 +71,17 @@ def _report_status() -> None:
         new = keyring.get_password(NEW_SERVICE, user)
         print(f"  keyring '{user}': matui={'present' if old else 'absent'} / "
               f"nerve={'present' if new else 'absent'}")
-    marker_old = STORE_DIR / ".matui-encrypted"
-    marker_new = STORE_DIR / ".nerve-encrypted"
+    marker_old = OLD_DIR / "store" / ".matui-encrypted"
+    marker_new = NEW_DIR / "store" / ".nerve-encrypted"
     print(f"  marqueur encrypt  : .matui-encrypted existe={marker_old.exists()}")
     print(f"                    : .nerve-encrypted existe={marker_new.exists()}")
 
 
 def _load_credentials() -> dict:
-    if not CONFIG_DIR.joinpath("credentials.json").exists():
+    if not (OLD_DIR / "credentials.json").exists():
         return {}
     try:
-        return json.loads(CONFIG_DIR.joinpath("credentials.json").read_text())
+        return json.loads((OLD_DIR / "credentials.json").read_text())
     except (OSError, ValueError):
         return {}
 
@@ -116,7 +115,7 @@ def migrate(force_delete: bool = False) -> None:
         print("[2/4] aucun secret à migrer (déjà migré ou absent).")
 
     # 3) Marqueur d'encryption au repos : .matui-encrypted -> .nerve-encrypted.
-    marker_src = CONFIG_DIR / "store" / ".matui-encrypted"
+    marker_src = OLD_DIR / "store" / ".matui-encrypted"
     marker_dst = NEW_DIR / "store" / ".nerve-encrypted"
     if marker_src.exists():
         marker_dst.parent.mkdir(parents=True, exist_ok=True)
