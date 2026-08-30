@@ -268,22 +268,26 @@ ToastRack {
 }
 
 /* Colonne centrale : pas de cadre, fond légèrement plus sombre que les
-   panneaux, aucun scrollbar parasite à la jonction. */
+   panneaux. La gouttière de scrollbar est gérée dans #timeline (le vrai
+   widget scrollable), pas ici : ce Vertical n'est pas scrollable. */
 #chat-area {
     height: 1fr;
     background: $bg;
     border: none;
     border-right: none;
-    scrollbar-size: 0 0;
 }
 
 /* Le texte de la timeline est aligné sur la grille du composer :
-   colonne 1 du panneau = prompt ">" (1 col) + espace (1 col) = col 3. */
+   colonne 1 du panneau = prompt ">" (1 col) + espace (1 col) = col 3.
+   RichLog est scrollable : sa gouttière de scrollbar (bande noire) doit
+   être masquée — scrollbar-size 0 n'empêche pas le scroll (clavier,
+   molette), il cache seulement la barre visuelle. */
 #timeline {
     height: 1fr;
     padding: 1 3 0 3;
     background: $bg;
     color: $text;
+    scrollbar-size: 0 0;
 }
 
 /* -- Splash screen (bannière MATUI au lancement) ------------------------ */

@@ -189,8 +189,13 @@ def _sidebar_room_markup(room: object | None, own_user_id: str) -> str:
     m = themes.muted()
     t = themes.text()
     lines = [f"[bold][{m}]ROOM[/{m}][/bold]"]
+    # État vide : on laisse la timeline centrale porter le message
+    # "Pick a room…" (écrit dans on_mount). Le répéter ici en l'absence de
+    # salon doublait l'info sur deux zones à la fois (état mal nettoyé).
+    # À long terme, un widget d'état vide dédié (un "empty state" partagé
+    # par ces deux zones) serait plus propre qu'un message isolé dans la
+    # timeline — à discuter avant tout refactor.
     if room is None:
-        lines.append(f"[{m}]Pick a room from the list[/{m}]")
         return "\n".join(lines)
     room_id = getattr(room, "room_id", "?")
     name = getattr(room, "display_name", None) or room_id
