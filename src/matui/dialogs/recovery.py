@@ -36,6 +36,7 @@ class RecoveryDialog(ModalScreen[None]):
         super().__init__()
         self.chat = chat
         self._confirming = False
+        self._confirm_timer: int | None = None
 
     def compose(self) -> ComposeResult:
         with Vertical(id="rec-dialog"):
@@ -60,6 +61,32 @@ class RecoveryDialog(ModalScreen[None]):
         elif event.button.id == "rec-regenerate":
             self._regenerate()
 
+    def _reset_confirm(self) -> None:
+        """Revient à l'état de repos : bouton "Regenerate", aucune attente."""
+        self._confirming = False
+        button = self.query_one("#rec-regenerate", Button)
+        button.label = "Regenerate"
+        button.variant = "default"
+        self._confirm_timer = None
+
+    def _arm_confirm_timeout(self) -> None:
+        """Lance (ou relance) le compte à rebours de confirmation d'un 1er clic.
+
+        Si l'utilisateur ne re-clique pas dans les 3 secondes, on revient à
+        l'état initial : l'ancienne clé n'a jamais été invalidée. Le timer
+        précédent, s'il existe, est d'abord arrêté pour ne pas superposer
+        deux expirations.
+        """
+        if self._confirm_timer is not None:
+            self._confirm_timer.stop()
+        self._confirm_timer = self.set_timer(3.0, self._expire_confirm)
+
+    def _expire_confirm(self) -> None:
+        if not self.is_mounted or not self._confirming:
+            return
+        self._reset_confirm()
+        self.app.notify("Regeneration cancelled — no key was invalidated", title="Recovery key")
+
     def _set_key(self, secret: str, note: str) -> None:
         accent = themes.accent()
         self.query_one("#rec-key", Static).update(
@@ -81,10 +108,12 @@ class RecoveryDialog(ModalScreen[None]):
         button = self.query_one("#rec-regenerate", Button)
         if not self._confirming:
             self._confirming = True
-            button.label = "Confirm regenerate"
+            button.label = "Confirm regenerate?"
             button.variant = "error"
+            self._arm_confirm_timeout()
             self.app.notify(
-                "Regenerating invalidates the previous recovery key",
+                "Regenerating invalidates the previous recovery key "
+                "— click again to confirm",
                 title="Recovery key",
             )
             return
@@ -92,9 +121,8 @@ class RecoveryDialog(ModalScreen[None]):
             secret = regenerate_recovery_secret()
         except Exception as exc:  # noqa: BLE001 — surface l'erreur à l'écran
             self.app.notify(f"Could not regenerate the key: {exc}", severity="error")
+            self._reset_confirm()
             return
-        self._confirming = False
-        button.label = "Regenerate"
-        button.variant = "default"
+        self._reset_confirm()
         self._set_key(secret, "The previous recovery key is now invalid.")
         self.app.notify("Recovery key regenerated", title="Recovery key")
