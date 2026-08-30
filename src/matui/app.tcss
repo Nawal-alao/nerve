@@ -1,0 +1,815 @@
+/* =====================================================================
+   matui — design system "premium flat", style OpenCode Zen
+   Désign tokens fournis par le thème actif (src/matui/themes.py) :
+   $bg, $pane, $surface, $border, $hover, $text, $muted, $primary,
+   $secondary, $accent, $section, $accent_text, $warning, $error,
+   $success, $modal_border.
+
+   Règles de l'interface :
+   - grille 4px/8px, pas de gros cadres, séparateurs hairline seulement
+   - trois colonnes continues (sidebar gauche · chat · sidebar droite)
+   - barre haute et pied discrets, toasts plats à expir. automatique
+   - "Less UI, more content".
+   ===================================================================== */
+
+/* -- Base ----------------------------------------------------------- */
+
+Screen {
+    background: $bg;
+}
+
+/* -- Pied : raccourcis (^R Rooms, ^L Compose, ^P Commands, …) -------- */
+
+Footer {
+    background: $bg;
+    color: $muted;
+    scrollbar-size: 0 0;
+}
+
+Footer .footer-key--key {
+    color: $muted;
+    background: transparent;
+    text-style: bold;
+    padding: 0 1;
+}
+
+Footer .footer-key--description {
+    color: #444444;
+    background: transparent;
+    padding: 0 1 0 0;
+}
+
+/* =====================================================================
+   Notifications (toasts) — plats, petite bordure gauche 1px, auto-expire
+   ===================================================================== */
+
+Toast {
+    width: 42;
+    max-width: 40%;
+    height: auto;
+    margin-top: 1;
+    margin-bottom: 1;
+    padding: 0 1;
+    background: transparent;
+    border: none;
+    color: $muted;
+    border-left: vkey $success;
+}
+
+Toast .toast--title {
+    text-style: bold;
+    color: $muted;
+}
+
+Toast.-warning {
+    border-left: vkey $warning;
+}
+
+Toast.-error {
+    border-left: vkey $error;
+}
+
+ToastRack {
+    margin-bottom: 1;
+}
+
+/* =====================================================================
+   Login — carte de bienvenue centrée
+   ===================================================================== */
+
+#login-wrap {
+    align: center middle;
+}
+
+#login-card {
+    width: 64;
+    max-width: 90%;
+    height: auto;
+    border: solid $border;
+    background: $pane;
+    padding: 1 3;
+    color: $text;
+}
+
+#brand {
+    content-align: center middle;
+    text-style: bold;
+    color: $primary;
+    padding-bottom: 0;
+}
+
+#tagline {
+    content-align: center middle;
+    color: $muted;
+    padding-bottom: 1;
+}
+
+#login-card Rule {
+    color: $border;
+    background: $border 25%;
+    padding-bottom: 1;
+    margin-bottom: 1;
+}
+
+.login-field {
+    margin-bottom: 1;
+    border: solid $border;
+    background: $surface;
+    color: $text;
+}
+
+.login-field:focus {
+    border: solid $primary;
+}
+
+#login-button {
+    margin-top: 1;
+}
+
+#login-status {
+    margin-top: 1;
+    height: 1;
+    color: $muted;
+    text-style: bold;
+}
+
+#login-status.error {
+    color: $error;
+}
+
+#login-status.success {
+    color: $success;
+}
+
+#login-hint {
+    margin-top: 2;
+    color: $muted;
+}
+
+/* =====================================================================
+   Chat — barre d'état en haut (discrète : fusionnée au fond, hairline)
+   ===================================================================== */
+
+#top-bar {
+    height: 2; /* 1 ligne de contenu + 1 ligne de bordure inférieure */
+    background: transparent;
+    border-bottom: solid $surface;
+    padding: 0 1;
+}
+
+#room-title {
+    width: 1fr;
+    content-align: left middle;
+    color: $text;
+}
+
+#sync-status {
+    width: auto;
+    content-align: right middle;
+    color: $muted;
+    padding: 0 0 0 1;
+}
+
+#clock {
+    width: auto;
+    content-align: right middle;
+    color: $muted;
+}
+
+/* -- Layout principal ------------------------------------------------ */
+
+#main {
+    height: 1fr;
+}
+
+/* Colonnes continues : les séparateurs sont des hairlines $surface à la
+   jonction des panneaux, jamais de cadre autour d'une zone. */
+#room-panel {
+    width: 30;
+    height: 1fr;
+    background: $pane;
+    border-right: solid $surface;
+}
+
+/* Marque en tête de la sidebar gauche (le "matui" du croquis).
+   hauteur 2 : 1 ligne de texte + 1 ligne de bordure inférieure. */
+#brand-sidebar {
+    height: 2;
+    padding: 0 1;
+    content-align: left middle;
+    text-style: bold;
+    color: $primary;
+    border-bottom: solid $surface;
+}
+
+/* Titre de section : petit, discret, aligné sur la grille des items. */
+#room-list-header {
+    height: 1;
+    content-align: left middle;
+    color: $muted;
+    text-style: bold;
+    padding: 0 1;
+}
+
+#room-list {
+    height: 1fr;
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+/* Chaque room tient une ligne compacte : nom (1fr, tronqué par "…") +
+   badge non-lu calé à droite, sans fond ni gros bloc. */
+#room-list ListItem {
+    height: 1;
+    padding: 0 1;
+    overflow: hidden;
+    text-wrap: nowrap;
+    background: transparent;
+}
+
+#room-list .room-row {
+    width: 1fr;
+    height: 1;
+}
+
+#room-list .room-name {
+    width: 1fr;
+    color: $muted;
+    text-overflow: ellipsis;
+    text-wrap: nowrap;
+    overflow: hidden;
+}
+
+#room-list .room-badge {
+    width: auto;
+    margin-left: 1;
+    color: $error;
+    text-wrap: nowrap;
+}
+
+/* Survol/sélection : uniquement une variation de luminosité. */
+#room-list ListItem.active {
+    background: $hover;
+}
+
+#room-list ListItem.active .room-name {
+    color: $text;
+}
+
+#room-list:focus > ListItem.-highlight,
+#room-list:blur > ListItem.-highlight {
+    background: $hover;
+}
+
+#room-list:focus > ListItem.-highlight .room-name,
+#room-list:blur > ListItem.-highlight .room-name {
+    color: $text;
+}
+
+/* Colonne centrale : pas de cadre, fond légèrement plus sombre que les
+   panneaux, aucun scrollbar parasite à la jonction. */
+#chat-area {
+    height: 1fr;
+    background: $bg;
+    border: none;
+    border-right: none;
+    scrollbar-size: 0 0;
+}
+
+/* Le texte de la timeline est aligné sur la grille du composer :
+   colonne 1 du panneau = prompt ">" (1 col) + espace (1 col) = col 3. */
+#timeline {
+    height: 1fr;
+    padding: 1 3 0 3;
+    background: $bg;
+    color: $text;
+}
+
+/* -- Splash screen (bannière MATUI au lancement) ------------------------ */
+
+SplashScreen {
+    background: $bg;
+    align: center middle;
+}
+
+#splash-wrap {
+    align: center middle;
+    width: auto;
+    height: auto;
+}
+
+#splash-art {
+    width: auto;
+    height: auto;
+    padding-bottom: 1;
+}
+
+#splash-sub {
+    width: auto;
+    height: auto;
+    color: $muted;
+    padding-bottom: 1;
+}
+
+#splash-hint {
+    width: auto;
+    height: auto;
+}
+
+/* -- Sidebar droite (panneaux contextuels Room / Session) -------------- */
+
+#sidebar {
+    width: 30;
+    height: 1fr;
+    background: $pane;
+    border-left: solid $surface;
+    padding: 1 1;
+    color: $text;
+}
+
+#sidebar > Static {
+    width: 100%;
+    height: auto;
+    padding-bottom: 0;
+    color: $text;
+}
+
+#sb-session {
+    padding-top: 1;
+    border-top: solid $surface;
+}
+
+/* -- Barre de saisie ------------------------------------------------- */
+
+/* Dockée en bas de la colonne chat : sans boîte, bordure supérieure
+   ultra-sombre (#141414), curseur/accent vert, bouton "→" discret. */
+#input-bar {
+    dock: bottom;
+    height: 2;
+    background: $bg;
+    border-top: solid #141414;
+    padding: 0 1;
+}
+
+/* Prompt ">" dans le flux (pas docké) : 1 cellule + 1 d'espace, puis le
+   composer commence sur la même grille que le texte de la timeline. */
+#input-prompt {
+    width: auto;
+    padding: 0 1 0 0;
+    color: $accent;
+    text-style: bold;
+    content-align: left middle;
+}
+
+#composer {
+    width: 1fr;
+    min-width: 0;
+    height: 1;
+    background: transparent;
+    color: $text;
+    border: none;
+    padding: 0 4 0 0;
+}
+
+/* Saisie verrouillée tant qu'aucun salon n'est ouvert : moins visible. */
+#composer:disabled {
+    opacity: 60%;
+}
+
+#composer:focus {
+    background: transparent;
+    border: none;
+}
+
+/* Curseur en couleur d'accent (vert sur matrix_green, orange sur
+   opencode) ; placeholder en texte secondaire. */
+#composer .input--cursor {
+    background: $accent;
+    color: $accent_text;
+    text-style: bold;
+}
+
+#composer .input--placeholder {
+    color: $muted;
+}
+
+/* Bouton d'envoi : Statique cliquable, plat, muet, révélé au survol. */
+#composer-send {
+    dock: right;
+    width: 3;
+    min-width: 3;
+    height: 1;
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: $muted;
+    content-align: center middle;
+}
+
+#composer-send:hover {
+    background: $hover;
+    color: $accent;
+}
+
+/* Autocomplétion des slash commands (recherche floue) : barre fine
+   au-dessus du composer, texte aligné sur la même grille. */
+#suggestion-list {
+    display: none;
+    height: auto;
+    max-height: 9;
+    border: hkey $border;
+    background: $surface;
+    margin: 0 1 0 1;
+    padding: 0;
+    scrollbar-size: 1 1;
+    scrollbar-color: $border;
+    scrollbar-background: $surface;
+}
+
+#suggestion-list ListItem {
+    padding: 0 2;
+    min-height: 1;
+    background: transparent;
+    color: $text;
+}
+
+#suggestion-list ListItem.-highlight,
+#suggestion-list ListItem:hover {
+    background: $hover !important;
+    color: $text;
+}
+
+/* =====================================================================
+   Palette de commandes (style opencode : dialogue centré "Commands")
+   Ultra-plat : modale sans bordure, input nu, surbrillance en aplat.
+   ===================================================================== */
+
+CommandPalette {
+    align: center middle;
+    background: $bg 80%;
+}
+
+#cp-dialog {
+    width: 62;
+    max-width: 94%;
+    height: auto;
+    max-height: 70%;
+    border: $modal_border; /* "none" (opencode) ou "solid #…" (matrix_green) */
+    background: $surface;
+    padding: 1 1 0 1;
+}
+
+#cp-title {
+    width: 100%;
+    content-align: left top;
+    text-style: bold;
+    color: $muted;
+    padding-bottom: 1;
+}
+
+#cp-search {
+    height: 3;
+    margin-bottom: 1;
+}
+
+#cp-search-icon {
+    dock: left;
+    width: auto;
+    content-align: center middle;
+    color: $primary;
+    text-style: bold;
+    padding: 0 1;
+}
+
+#cp-input {
+    background: transparent;
+    border: none;
+    color: $primary;
+}
+
+#cp-input:focus {
+    background: transparent;
+    border: none;
+    color: $primary;
+}
+
+#cp-input .input--placeholder {
+    color: $primary;
+}
+
+#cp-list {
+    background: transparent;
+    border: none;
+    height: 1fr;
+    max-height: 100%;
+    scrollbar-size: 1 1;
+    scrollbar-color: $border;
+    scrollbar-background: transparent;
+}
+
+#cp-list ListItem {
+    padding: 0 1;
+    height: 1;
+    background: transparent;
+    color: $text;
+}
+
+.cp-row {
+    width: 1fr;
+    height: 1;
+    background: transparent;
+}
+
+.cp-row-title {
+    width: 1fr;
+    background: transparent;
+}
+
+.cp-row-right {
+    dock: right;
+    width: auto;
+    background: transparent;
+}
+
+/* En-têtes de sections (non sélectionnables) : titre en lavande $section. */
+.cp-section {
+    padding: 0 1;
+    height: 1;
+    width: 100%;
+    color: $section;
+    text-style: bold;
+    background: transparent;
+}
+
+#cp-list ListItem.-highlight,
+#cp-list:focus > ListItem.-highlight,
+#cp-list ListItem:hover {
+    background: $primary;
+    color: $accent_text;
+}
+
+#cp-empty {
+    display: none;
+    padding: 1 1;
+    color: $muted;
+    content-align: center top;
+    text-style: italic;
+}
+
+/* -- Modal « Join a room » --------------------------------------------- */
+
+#jr-dialog {
+    width: 56;
+    max-width: 94%;
+    height: auto;
+    border: solid $border;
+    background: $surface;
+    padding: 1 2 1 2;
+}
+
+#jr-title {
+    width: 100%;
+    text-style: bold;
+    color: $muted;
+    padding-bottom: 1;
+}
+
+#jr-alias {
+    background: $pane;
+    border: solid $border;
+    color: $text;
+    margin-bottom: 1;
+}
+
+#jr-alias:focus {
+    border: solid $primary;
+}
+
+#jr-buttons {
+    height: 3;
+    width: 100%;
+    align-horizontal: right;
+}
+
+#jr-buttons Button {
+    margin-left: 1;
+}
+
+/* =====================================================================
+   Vérification d'appareil par emoji (SAS) — confirmation humaine
+   ===================================================================== */
+
+SasDialog {
+    align: center middle;
+    background: $bg 80%;
+}
+
+#sas-dialog {
+    width: 56;
+    max-width: 94%;
+    height: auto;
+    border: solid $border;
+    background: $surface;
+    padding: 1 2;
+}
+
+#sas-title {
+    content-align: left top;
+    text-style: bold;
+    color: $primary;
+    padding-bottom: 1;
+}
+
+#sas-device {
+    color: $muted;
+    padding-bottom: 1;
+}
+
+#sas-hint {
+    color: $muted;
+    padding-bottom: 1;
+}
+
+#sas-emojis {
+    height: auto;
+    margin-bottom: 1;
+}
+
+.sas-emoji {
+    height: 1;
+    color: $text;
+    padding: 0 0 0 1;
+}
+
+#sas-actions {
+    height: auto;
+    align: right middle;
+    padding-top: 1;
+}
+
+#sas-actions Button {
+    margin-left: 1;
+    min-width: 14;
+}
+
+/* =====================================================================
+   Confirmation humaine des invitations
+   ===================================================================== */
+
+InviteDialog {
+    align: center middle;
+    background: $bg 80%;
+}
+
+#invite-dialog {
+    width: 60;
+    max-width: 94%;
+    height: auto;
+    border: solid $border;
+    background: $surface;
+    padding: 1 2;
+}
+
+#invite-title {
+    content-align: left top;
+    text-style: bold;
+    color: $primary;
+    padding-bottom: 1;
+}
+
+#invite-room {
+    color: $text;
+    padding-bottom: 1;
+}
+
+#invite-sender {
+    color: $muted;
+    padding-bottom: 1;
+}
+
+#invite-hint {
+    color: $muted;
+    padding-bottom: 1;
+}
+
+#invite-actions {
+    height: auto;
+    align: right middle;
+    padding-top: 1;
+}
+
+#invite-actions Button {
+    margin-left: 1;
+    min-width: 14;
+}
+
+/* =====================================================================
+   Clé de récupération de session (E2EE) — gestion et restauration
+   ===================================================================== */
+
+RecoveryDialog,
+StoreUnlockDialog {
+    align: center middle;
+    background: $bg 80%;
+}
+
+#rec-dialog {
+    width: 64;
+    max-width: 94%;
+    height: auto;
+    border: solid $border;
+    background: $surface;
+    padding: 1 2;
+}
+
+#rec-title {
+    content-align: left top;
+    text-style: bold;
+    color: $primary;
+    padding-bottom: 1;
+}
+
+#rec-hint {
+    color: $muted;
+    padding-bottom: 1;
+}
+
+#rec-key {
+    width: 100%;
+    height: auto;
+    padding: 1 1;
+    background: $pane;
+    border: solid $border;
+    color: $text;
+    text-wrap: wrap;
+    margin-bottom: 1;
+}
+
+#rec-actions {
+    height: auto;
+    align: right middle;
+}
+
+#rec-actions Button {
+    margin-left: 1;
+    min-width: 12;
+}
+
+#unlock-dialog {
+    width: 64;
+    max-width: 94%;
+    height: auto;
+    border: solid $border;
+    background: $surface;
+    padding: 1 2;
+}
+
+#unlock-title {
+    content-align: left top;
+    text-style: bold;
+    color: $primary;
+    padding-bottom: 1;
+}
+
+#unlock-hint {
+    color: $muted;
+    padding-bottom: 1;
+}
+
+#unlock-key {
+    background: $pane;
+    border: solid $border;
+    color: $text;
+    margin-bottom: 1;
+}
+
+#unlock-key:focus {
+    border: solid $primary;
+}
+
+#unlock-status {
+    height: auto;
+    min-height: 1;
+    color: $muted;
+    margin-bottom: 1;
+}
+
+#unlock-status.error {
+    color: $error;
+}
+
+#unlock-status.success {
+    color: $success;
+}
+
+#unlock-actions {
+    height: auto;
+    align: right middle;
+}
+
+#unlock-actions Button {
+    margin-left: 1;
+    min-width: 14;
+}
