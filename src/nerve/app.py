@@ -45,7 +45,7 @@ _apply_theme_globals()
 
 class NerveApp(App):
     CSS_PATH = "app.tcss"
-    TITLE = "matui"
+    TITLE = "nerve"
     ENABLE_COMMAND_PALETTE = False
     BINDINGS = [("ctrl+p", "command_palette", "Commands")]
 

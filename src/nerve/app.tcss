@@ -340,7 +340,7 @@ ToastRack {
     scrollbar-size: 0 0;
 }
 
-/* -- Splash screen (bannière MATUI au lancement) ------------------------ */
+/* -- Splash screen (bannière NERVE au lancement) ------------------------ */
 
 SplashScreen {
     background: $bg;
@@ -363,6 +363,14 @@ SplashScreen {
     width: auto;
     height: auto;
     color: $muted;
+    padding-bottom: 1;
+}
+
+#splash-detail {
+    width: auto;
+    height: auto;
+    color: $muted;
+    text-style: dim;
     padding-bottom: 1;
 }
 

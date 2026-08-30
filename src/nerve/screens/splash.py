@@ -35,7 +35,7 @@ def _splash_art() -> Text:
     spec = themes.spec()
     start = _to_rgb(spec.muted, (85, 85, 85))
     end = _to_rgb(spec.primary, (229, 158, 114))
-    art = Figlet(font="slant").renderText("MATUI").rstrip("\n")
+    art = Figlet(font="slant").renderText("NERVE").rstrip("\n")
     lines = art.split("\n")
     total = sum(len(line) for line in lines)
     out = Text()
@@ -65,7 +65,8 @@ class SplashScreen(Screen):
     def compose(self) -> ComposeResult:
         with Vertical(id="splash-wrap"):
             yield Static(_splash_art(), id="splash-art")
-            yield Static("// encrypted matrix client — the grid awaits", id="splash-sub")
+            yield Static("secure · private · minimal", id="splash-sub")
+            yield Static("nerve // encrypted", id="splash-detail")
             yield Static("[dim]enter / esc to skip[/dim]", id="splash-hint")
 
     def on_mount(self) -> None:

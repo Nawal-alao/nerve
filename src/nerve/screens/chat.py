@@ -78,7 +78,7 @@ class ChatScreen(Screen):
             yield Static("", id="clock")
         with Horizontal(id="main"):
             with Vertical(id="room-panel"):
-                yield Static("◆ matui", id="brand-sidebar")
+                yield Static("◆ nerve", id="brand-sidebar")
                 yield Static("ROOMS", id="room-list-header")
                 yield ListView(id="room-list")
             with Vertical(id="chat-area"):

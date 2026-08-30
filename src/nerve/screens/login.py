@@ -23,7 +23,7 @@ class LoginScreen(Screen):
     def compose(self) -> ComposeResult:
         with Vertical(id="login-wrap"):
             with Vertical(id="login-card"):
-                yield Static("◆ matui", id="brand")
+                yield Static("◆ nerve", id="brand")
                 yield Static(
                     "A premium Matrix client, right in your terminal.",
                     id="tagline",
