@@ -35,7 +35,7 @@ class JoinRoomDialog(ModalScreen[None]):
             yield Static("Join a room", id="jr-title")
             yield Input(placeholder="#room:server", id="jr-alias")
             with Horizontal(id="jr-buttons"):
-                yield Button("Join", id="jr-confirm", variant="primary")
+                yield Button("Join", id="jr-confirm", variant="primary", classes="-primary")
                 yield Button("Cancel", id="jr-cancel", variant="default")
 
     def on_mount(self) -> None:

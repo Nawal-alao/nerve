@@ -48,8 +48,8 @@ class RecoveryDialog(ModalScreen[None]):
             )
             yield Static("[dim]Press Reveal to display the key below.[/dim]", id="rec-key")
             with Horizontal(id="rec-actions"):
-                yield Button("Reveal", id="rec-reveal", variant="primary")
-                yield Button("Regenerate", id="rec-regenerate")
+                yield Button("Reveal", id="rec-reveal", variant="primary", classes="-primary")
+                yield Button("Regenerate", id="rec-regenerate", classes="-danger")
                 yield Button("Close", id="rec-close")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:

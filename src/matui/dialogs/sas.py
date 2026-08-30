@@ -54,8 +54,8 @@ class SasDialog(ModalScreen[None]):
                         classes="sas-emoji",
                     )
             with Horizontal(id="sas-actions"):
-                yield Button("Verify", id="sas-confirm", variant="success")
-                yield Button("Reject", id="sas-reject", variant="error")
+                yield Button("Verify", id="sas-confirm", variant="success", classes="-primary")
+                yield Button("Reject", id="sas-reject", variant="error", classes="-danger")
                 yield Button("Cancel", id="sas-cancel")
 
     def on_mount(self) -> None:

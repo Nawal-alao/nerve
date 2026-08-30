@@ -53,8 +53,8 @@ class InviteDialog(ModalScreen[None]):
                 id="invite-hint",
             )
             with Horizontal(id="invite-actions"):
-                yield Button("Accept", id="invite-accept", variant="success")
-                yield Button("Decline", id="invite-decline", variant="error")
+                yield Button("Accept", id="invite-accept", variant="success", classes="-primary")
+                yield Button("Decline", id="invite-decline", variant="error", classes="-danger")
 
     def on_mount(self) -> None:
         self.query_one("#invite-decline", Button).focus()

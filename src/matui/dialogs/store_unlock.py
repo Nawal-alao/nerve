@@ -50,8 +50,8 @@ class StoreUnlockDialog(ModalScreen[None]):
             yield Input(placeholder="Recovery key", id="unlock-key")
             yield Label("", id="unlock-status")
             with Horizontal(id="unlock-actions"):
-                yield Button("Restore", id="unlock-restore", variant="primary")
-                yield Button("Sign out & start fresh", id="unlock-logout")
+                yield Button("Restore", id="unlock-restore", variant="primary", classes="-primary")
+                yield Button("Sign out & start fresh", id="unlock-logout", classes="-danger")
 
     def on_mount(self) -> None:
         self.query_one("#unlock-key", Input).focus()
