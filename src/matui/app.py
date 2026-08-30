@@ -11,7 +11,7 @@ from __future__ import annotations
 from textual.app import App
 
 from . import themes
-from .config import Credentials, StoreLockedError
+from .config import Credentials, StoreLockedError, skip_splash
 from .dialogs.command_palette import CommandPalette
 from .dialogs.store_unlock import StoreUnlockDialog
 from .matrix_client import MatuiClient
@@ -67,7 +67,10 @@ class MatuiApp(App):
         return name
 
     async def on_mount(self) -> None:
-        await self.push_screen(SplashScreen())
+        if skip_splash():
+            await self.begin()
+        else:
+            await self.push_screen(SplashScreen())
 
     async def begin(self) -> None:
         """Après le splash : login ou reprise du chat selon les creds."""

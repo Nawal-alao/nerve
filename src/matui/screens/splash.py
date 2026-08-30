@@ -1,5 +1,5 @@
-"""Splash screen — bannière hacking scene : "MATUI" en fonte _slant, dégradé
-façon lolcat, auto-transition vers login/chat."""
+"""Splash screen — bannière : "MATUI" en fonte _slant, dégradé de thème
+sobre (muted → primary), auto-transition vers login/chat."""
 
 from __future__ import annotations
 
@@ -12,37 +12,39 @@ from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Static
 
+from .. import themes
 
-def _hsv(hue: float, sat: float, val: float) -> tuple[int, int, int]:
-    """HSV -> (r, g, b) en 0..255, hue dans [0, 1)."""
-    i = int(hue * 6)
-    f = hue * 6 - i
-    p = val * (1 - sat)
-    q = val * (1 - f * sat)
-    t = val * (1 - (1 - f) * sat)
-    r, g, b = (
-        (val, t, p),
-        (q, val, p),
-        (p, val, t),
-        (p, q, val),
-        (t, p, val),
-        (val, p, q),
-    )[i % 6]
-    return int(r * 255), int(g * 255), int(b * 255)
+
+def _lerp(percent: float, start: tuple[int, int, int], end: tuple[int, int, int]) -> tuple[int, int, int]:
+    """Interpole deux couleurs RGB en 0..255 selon `percent` dans [0, 1]."""
+    return tuple(
+        round(a + (b - a) * percent) for a, b in zip(start, end)
+    )
+
+
+def _to_rgb(hex_color: str, fallback: tuple[int, int, int]) -> tuple[int, int, int]:
+    """'#rrggbb' -> (r, g, b). Retourne `fallback` si la valeur est invalide."""
+    try:
+        return tuple(int(hex_color[i : i + 2], 16) for i in (1, 3, 5))
+    except (ValueError, TypeError):
+        return fallback
 
 
 def _splash_art() -> Text:
-    """Bannière 'MATUI' en fonte slant, teintée arc-en-ciel dégradé."""
+    """Bannière 'MATUI' en fonte slant, dégradé de thème (muted → primary)."""
+    spec = themes.spec()
+    start = _to_rgb(spec.muted, (85, 85, 85))
+    end = _to_rgb(spec.primary, (229, 158, 114))
     art = Figlet(font="slant").renderText("MATUI").rstrip("\n")
     lines = art.split("\n")
     total = sum(len(line) for line in lines)
     out = Text()
-    hue = 0.0
+    pos = 0.0
     for idx, line in enumerate(lines):
         for ch in line:
-            r, g, b = _hsv(hue, 0.85, 0.95)
+            r, g, b = _lerp(pos / total if total else 0.0, start, end)
             out.append(ch, style=f"rgb({r},{g},{b})")
-            hue += 1.0 / total if total else 0.0
+            pos += 1.0
         if idx < len(lines) - 1:
             out.append("\n")
     return out

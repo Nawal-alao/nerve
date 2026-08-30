@@ -119,6 +119,19 @@ def ensure_store_dir() -> Path:
     return STORE_DIR
 
 
+def skip_splash() -> bool:
+    """Vrai si l'application doit démarrer sans l'écran de bienvenue.
+
+    Option lisible dans config.json via la clé `skip_splash` (défaut :
+    désactivé). N'est pas persistée par matui : l'utilisateur la pose
+    manuellement pour un lancement rapide / scripté."""
+    try:
+        data = json.loads(CONFIG_DIR.joinpath("config.json").read_text())
+        return bool(data.get("skip_splash", False))
+    except (OSError, ValueError, TypeError):
+        return False
+
+
 def remove_store() -> None:
     """Supprime le store olm local (déconnexion complète de l'appareil)."""
     shutil.rmtree(STORE_DIR, ignore_errors=True)
