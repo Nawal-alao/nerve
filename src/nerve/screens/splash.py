@@ -13,6 +13,7 @@ from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.screen import Screen
+from textual.timer import Timer
 from textual.widgets import Static
 
 from .. import themes
@@ -85,9 +86,18 @@ class SplashScreen(Screen):
     def __init__(self) -> None:
         super().__init__()
         self._launched = False
+        self._animation_started = False
         self._tagline: Static | None = None
         self._typed = 0
         self._cursor_on = True
+        # Timers de l'animation : toujours stockés, toujours arrêtés
+        # explicitement (.stop()) — jamais via la valeur de retour du callback
+        # (`return False` est ignoré par Textual 8.2.8).
+        self._fade_timer: Timer | None = None
+        self._wait_timer: Timer | None = None
+        self._typing_timer: Timer | None = None
+        self._blink_timer: Timer | None = None
+        self._auto_timer: Timer | None = None
 
     def compose(self) -> ComposeResult:
         with Vertical(id="splash-wrap"):
@@ -98,9 +108,18 @@ class SplashScreen(Screen):
             yield Static("nerve // encrypted", id="splash-detail")
 
     def on_mount(self) -> None:
+        if self._animation_started:
+            return
+        self._animation_started = True
         self._adapt_layout()
         self._animate_logo()
-        self.set_timer(_AUTO_MS, self._launch)
+        self._auto_timer = self.set_timer(_AUTO_MS, self._launch)
+
+    def on_unmount(self) -> None:
+        # Filet de sécurité : si le screen est un jour popé, plus aucun timer
+        # ne survivra (idempotent — stop() sur un timer déjà arrêté est sans
+        # effet).
+        self._stop_animation()
 
     def _adapt_layout(self) -> None:
         """Adaptation discrète aux petits terminaux : le CSS Textual n'a pas
@@ -121,28 +140,37 @@ class SplashScreen(Screen):
 
         Le fondu est piloté manuellement via `styles.opacity` (la propriété
         `opacity` du widget n'est pas animable par `.animate()` dans cette
-        version de Textual, pas de setter) — trame à trame, sans dépendance."""
+        version de Textual, pas de setter) — trame à trame, sans dépendance.
+        Le timer est stocké et stoppé explicitement à la dernière trame."""
         self._art = self.query_one("#splash-art", Static)
         self._art.styles.opacity = 0.0
         self._fade_step = 0
-        self.set_interval(_FADE_MS / _FADE_STEPS, self._fade_tick)
+        self._fade_timer = self.set_interval(_FADE_MS / _FADE_STEPS, self._fade_tick)
 
     def _fade_tick(self) -> None:
         if not self.is_mounted:
-            return False
+            return
         self._fade_step += 1
         self._art.styles.opacity = min(1.0, self._fade_step / _FADE_STEPS)
         if self._fade_step < _FADE_STEPS:
-            return None
+            return
         self._art.styles.opacity = 1.0
-        self.set_timer(_TAG_WAIT, self._begin_typing)
-        return False  # stoppe le timer de fondu
+        self._stop_timer(self._fade_timer)
+        # Chaîne en AVAL, une seule fois : pause puis frappe de la tagline.
+        self._wait_timer = self.set_timer(_TAG_WAIT, self._begin_typing)
+
+    def _stop_timer(self, timer: Timer | None) -> None:
+        """Arrête un timer s'il existe (guard contre None)."""
+        if timer is not None:
+            timer.stop()
 
     def _begin_typing(self) -> None:
+        if not self.is_mounted:
+            return
         self._tagline = self.query_one("#splash-sub", Static)
         self._tagline.update("")
         self._typed = 0
-        self.set_interval(_TAG_TICK, self._type_tick)
+        self._typing_timer = self.set_interval(_TAG_TICK, self._type_tick)
 
     @staticmethod
     def _tagline_text(body: str, cursor_on: bool) -> Text:
@@ -156,29 +184,44 @@ class SplashScreen(Screen):
 
     def _type_tick(self) -> None:
         if not self.is_mounted:
-            return False
+            return
         assert self._tagline is not None
         self._typed += 1
         self._cursor_on = True
         self._tagline.update(self._tagline_text(_TAGLINE[: self._typed], True))
         if self._typed < len(_TAGLINE):
-            return None
-        self.set_interval(_CURSOR_BLINK, self._cursor_tick)
-        return False  # stoppe le timer de frappe
+            return
+        # Texte entièrement tapé : on arrête la frappe, puis on passe au
+        # clignotement du curseur — aucun relance de la chaîne.
+        self._stop_timer(self._typing_timer)
+        self._blink_timer = self.set_interval(_CURSOR_BLINK, self._cursor_tick)
 
     def _cursor_tick(self) -> None:
         if not self.is_mounted:
-            return False
+            return
         self._cursor_on = not self._cursor_on
         # Le curseur reste présent (largeur constante → aucun décalage du
         # groupe) ; on le rend juste invisible via la couleur du fond.
         self._tagline.update(self._tagline_text(_TAGLINE, self._cursor_on))
-        return None
+
+    def _stop_animation(self) -> None:
+        """Arrête tous les timers d'animation encore actifs (guards None)."""
+        if self._fade_timer is not None:
+            self._fade_timer.stop()
+        if self._wait_timer is not None:
+            self._wait_timer.stop()
+        if self._typing_timer is not None:
+            self._typing_timer.stop()
+        if self._blink_timer is not None:
+            self._blink_timer.stop()
+        if self._auto_timer is not None:
+            self._auto_timer.stop()
 
     def _launch(self) -> None:
         if self._launched:
             return
         self._launched = True
+        self._stop_animation()
         asyncio.create_task(self.app.begin())
 
     def action_skip(self) -> None:
