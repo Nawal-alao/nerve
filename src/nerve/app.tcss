@@ -552,7 +552,7 @@ CommandPalette {
     max-height: 70%;
     border: $modal_border; /* "none" (opencode) ou "solid #…" (matrix_green) */
     background: $surface;
-    padding: 1 1 0 1;
+    padding: 1 1 1 1;
 }
 
 #cp-title {

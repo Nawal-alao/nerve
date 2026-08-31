@@ -167,22 +167,27 @@ class CommandPalette(ModalScreen[None]):
 
     @staticmethod
     def _markup(entry: CommandEntry, cursor: bool) -> tuple[Text, Text]:
-        # Segments stylés via rich.text.Text uniquement : n'utilisent aucun
-        # markup d'échappement, le raccourci et la description sont bruts.
+        # Le titre est suivi de la description en flux gauche→droite quand il
+        # n'y a pas de raccourci clavier (la description n'est jamais ancrée
+        # à droite, sinon la lecture se ferait droite→gauche).
         if cursor:
             color = themes.accent_text()
             title = Text(entry.title, style=f"bold {color}")
         else:
             title = Text(entry.title)
+        if not entry.key and entry.description:
+            title.append(f"  {entry.description}")
+            title.stylize(
+                themes.muted(),
+                start=len(entry.title) + 2,
+                end=len(entry.title) + 2 + len(entry.description),
+            )
         right = Text()
         if entry.key:
             right.append(entry.key)
             right.stylize(
                 f"bold {themes.accent_text()}" if cursor else themes.muted()
             )
-        elif entry.description:
-            right.append(entry.description)
-            right.stylize(themes.muted())
         return title, right
 
     @staticmethod
