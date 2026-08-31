@@ -16,7 +16,7 @@ from textual.screen import Screen
 from textual.timer import Timer
 from textual.widgets import Static
 
-from .. import themes
+from .. import __version__, themes
 
 
 # --- Constantes d'animation (aucune couleur ici : viole la règle absolue) ---
@@ -106,6 +106,7 @@ class SplashScreen(Screen):
                 yield Static("", id="splash-sub")  # remplie par la frappe
                 yield Static("enter   continue\nesc     skip", id="splash-hint")
             yield Static("nerve // encrypted", id="splash-detail")
+            yield Static(f"v{__version__}", id="splash-version")
 
     def on_mount(self) -> None:
         if self._animation_started:

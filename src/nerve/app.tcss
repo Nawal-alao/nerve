@@ -346,7 +346,8 @@ ToastRack {
    (#splash-group, 1fr) reste parfaitement centré sur l'écran pendant que
    #splash-detail est plié en bas-gauche — aucun décantage du logo. Le
    groupe est remonté au-dessus du centre (asymétrie) via la marge basse
-   du hint. */
+   du hint. Une respiration légère sépare les textes (le logo du hint), à
+   l'image de la palette de commandes. */
 
 SplashScreen {
     background: $bg;
@@ -373,7 +374,7 @@ SplashScreen {
     width: auto;
     height: auto;
     color: $muted;
-    margin-top: 2;
+    margin-top: 1;
 }
 
 #splash-hint {
@@ -381,18 +382,23 @@ SplashScreen {
     height: auto;
     color: $muted;
     text-style: dim;
-    margin-top: 6;
-    margin-bottom: 5;
+    margin-top: 2;
+    margin-bottom: 2;
 }
 
-/* Micro-détail technique discret, plié en bas-gauche (hors du flux
+/* Micro-détails techniques discrets, pliés en bas-gauche (hors du flux
    centré : jamais en concurrence visuelle avec le logo). */
-#splash-detail {
+#splash-detail,
+#splash-version {
     width: auto;
     height: auto;
     color: $muted;
     text-style: dim;
     margin-left: 1;
+}
+
+#splash-version {
+    margin-top: 1;
 }
 
 /* Petits terminaux (pas de media queries en CSS Textual) : le SplashScreen
