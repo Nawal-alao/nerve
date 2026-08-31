@@ -584,47 +584,70 @@ SplashScreen {
 
 /* =====================================================================
    Palette de commandes (style opencode : dialogue centré "Commands")
-   Ultra-plat : modale sans bordure, input nu, surbrillance en aplat.
+   Premium flat : icônes, keycaps, hiérarchie claire.
    ===================================================================== */
 
 CommandPalette {
     align: center middle;
-    background: $bg 80%;
+    background: $bg 85%;
 }
 
 #cp-dialog {
-    width: 62;
+    width: 70;
     max-width: 94%;
     height: auto;
-    max-height: 70%;
-    border: $modal_border; /* "none" (opencode) ou "solid #…" (matrix_green) */
+    max-height: 75%;
+    border: $modal_border;
     background: $surface;
-    padding: 1 1 1 1;
+    padding: 0;
 }
+
+/* -- Titre ---------------------------------------------------------- */
 
 #cp-title {
     width: 100%;
-    height: 1;
-    padding-bottom: 1;
+    height: 2;
+    padding: 1 2 0 2;
+    background: $pane;
+    border-bottom: solid $border;
 }
 
 #cp-title-text {
     width: 1fr;
     content-align: left middle;
     text-style: bold;
-    color: $muted;
+    color: $text;
+    text-style: bold;
 }
 
 #cp-title-esc {
     dock: right;
     width: auto;
     content-align: right middle;
+    padding: 0 1;
+    background: $surface;
+    border: solid $border;
     color: $muted;
+    text-style: bold;
 }
+
+#cp-title-esc:hover {
+    border: solid $primary;
+    color: $primary;
+}
+
+/* -- Recherche ------------------------------------------------------ */
 
 #cp-search {
     height: 3;
-    margin-bottom: 1;
+    padding: 0 2;
+    margin: 1 1 0 1;
+    background: $pane;
+    border: solid $border;
+}
+
+#cp-search:focus-within {
+    border: solid $primary;
 }
 
 #cp-search-icon {
@@ -633,37 +656,39 @@ CommandPalette {
     content-align: center middle;
     color: $primary;
     text-style: bold;
-    padding: 0 1;
+    padding: 0 1 0 0;
 }
 
 #cp-input {
     background: transparent;
     border: none;
-    color: $primary;
+    color: $text;
 }
 
 #cp-input:focus {
     background: transparent;
     border: none;
-    color: $primary;
 }
 
 #cp-input .input--placeholder {
-    color: $primary;
+    color: $muted;
 }
+
+/* -- Liste ---------------------------------------------------------- */
 
 #cp-list {
     background: transparent;
     border: none;
     height: auto;
     max-height: 100%;
+    padding: 0 0 1 0;
     scrollbar-size: 1 1;
     scrollbar-color: $border;
     scrollbar-background: transparent;
 }
 
 #cp-list ListItem {
-    padding: 0 1;
+    padding: 0 2;
     height: 1;
     background: transparent;
     color: $text;
@@ -673,28 +698,47 @@ CommandPalette {
     width: 1fr;
     height: 1;
     background: transparent;
+    align: left middle;
 }
 
+/* Icône de catégorie */
+.cp-row-icon {
+    width: 3;
+    min-width: 3;
+    content-align: center middle;
+    background: transparent;
+    color: $muted;
+}
+
+/* Titre + description */
 .cp-row-title {
     width: 1fr;
     background: transparent;
+    padding-left: 1;
 }
 
+/* Raccourci clavier (keycap) */
 .cp-row-right {
     dock: right;
     width: auto;
-    background: transparent;
+    content-align: right middle;
+    background: $surface;
+    padding: 0 1;
+    color: $muted;
 }
 
-/* En-têtes de sections (non sélectionnables) : titre en lavande $section. */
+/* -- Headers de sections -------------------------------------------- */
+
 .cp-section {
-    padding: 0 1;
+    padding: 1 2 0 2;
     height: 1;
     width: 100%;
     color: $section;
     text-style: bold;
     background: transparent;
 }
+
+/* -- Sélection ------------------------------------------------------ */
 
 #cp-list ListItem.-highlight,
 #cp-list:focus > ListItem.-highlight,
@@ -703,9 +747,19 @@ CommandPalette {
     color: $accent_text;
 }
 
+#cp-list ListItem.-highlight .cp-row-right,
+#cp-list:focus > ListItem.-highlight .cp-row-right,
+#cp-list ListItem:hover .cp-row-right {
+    background: $primary;
+    color: $accent_text;
+    border: none;
+}
+
+/* -- Empty state ---------------------------------------------------- */
+
 #cp-empty {
     display: none;
-    padding: 1 1;
+    padding: 2 2;
     color: $muted;
     content-align: center top;
     text-style: italic;

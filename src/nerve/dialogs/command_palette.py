@@ -27,8 +27,17 @@ class CommandEntry(NamedTuple):
     description: str
     key: str
     category: str
+    icon: str = ""
     suggested: bool = False
 
+
+# Icônes par catégorie (unicode, pas de NerdFont requis)
+_CATEGORY_ICONS = {
+    "Navigation": "⌘",
+    "Chat": "✎",
+    "Action": "➤",
+    "System": "⚙",
+}
 
 COMMANDS: list[CommandEntry] = [
     CommandEntry(
@@ -37,6 +46,7 @@ COMMANDS: list[CommandEntry] = [
         "Jump to the rooms list",
         "ctrl+r",
         "Navigation",
+        icon="⌘",
         suggested=True,
     ),
     CommandEntry(
@@ -45,6 +55,7 @@ COMMANDS: list[CommandEntry] = [
         "Focus the message input",
         "ctrl+l",
         "Navigation",
+        icon="⌘",
         suggested=True,
     ),
     CommandEntry(
@@ -53,6 +64,7 @@ COMMANDS: list[CommandEntry] = [
         "Show or hide the right context panel",
         "ctrl+d",
         "Navigation",
+        icon="⌘",
     ),
     CommandEntry(
         "clear_screen",
@@ -60,6 +72,7 @@ COMMANDS: list[CommandEntry] = [
         "Clear the active room timeline",
         "ctrl+k",
         "Chat",
+        icon="✎",
     ),
     CommandEntry(
         "mark_read",
@@ -67,6 +80,7 @@ COMMANDS: list[CommandEntry] = [
         "Reset the unread counter",
         "",
         "Chat",
+        icon="✎",
     ),
     CommandEntry(
         "join_room",
@@ -74,6 +88,7 @@ COMMANDS: list[CommandEntry] = [
         "Type an alias (#room:server)",
         "",
         "Chat",
+        icon="✎",
     ),
     CommandEntry(
         "sendimg",
@@ -81,6 +96,7 @@ COMMANDS: list[CommandEntry] = [
         "Insert /sendimg in the composer",
         "",
         "Action",
+        icon="➤",
     ),
     CommandEntry(
         "open_last_link",
@@ -88,6 +104,7 @@ COMMANDS: list[CommandEntry] = [
         "Open the recent URL of the active room",
         "",
         "Action",
+        icon="➤",
     ),
     CommandEntry(
         "sync_status",
@@ -95,6 +112,7 @@ COMMANDS: list[CommandEntry] = [
         "Show the current sync state",
         "",
         "System",
+        icon="⚙",
     ),
     CommandEntry(
         "theme",
@@ -102,6 +120,7 @@ COMMANDS: list[CommandEntry] = [
         "Toggle between OpenCode Zen and Matrix Green",
         "",
         "System",
+        icon="⚙",
     ),
     CommandEntry(
         "recovery",
@@ -109,6 +128,7 @@ COMMANDS: list[CommandEntry] = [
         "Show or regenerate the E2EE session recovery key",
         "",
         "System",
+        icon="⚙",
     ),
     CommandEntry(
         "switch_account",
@@ -116,6 +136,7 @@ COMMANDS: list[CommandEntry] = [
         "Return to account selection",
         "",
         "System",
+        icon="⚙",
     ),
     CommandEntry(
         "logout",
@@ -123,6 +144,7 @@ COMMANDS: list[CommandEntry] = [
         "Close the session and erase local data",
         "",
         "System",
+        icon="⚙",
     ),
     CommandEntry(
         "quit",
@@ -130,6 +152,7 @@ COMMANDS: list[CommandEntry] = [
         "Close the application",
         "ctrl+q",
         "System",
+        icon="⏻",
     ),
 ]
 
@@ -173,35 +196,42 @@ class CommandPalette(ModalScreen[None]):
         return self.query_one("#cp-input", Input).value.strip().lower()
 
     @staticmethod
-    def _markup(entry: CommandEntry, cursor: bool) -> tuple[Text, Text]:
-        # Le titre est suivi de la description en flux gauche→droite quand il
-        # n'y a pas de raccourci clavier (la description n'est jamais ancrée
-        # à droite, sinon la lecture se ferait droite→gauche).
+    def _markup(entry: CommandEntry, cursor: bool) -> tuple[Text, Text, Text]:
+        """Construit le markup d'une ligne : (icône, titre+desc, raccourci)."""
+        accent = themes.accent()
+        muted = themes.muted()
+
+        # Icône
         if cursor:
-            color = themes.accent_text()
-            title = Text(entry.title, style=f"bold {color}")
+            icon = Text(entry.icon, style=f"bold {accent}")
         else:
-            title = Text(entry.title)
+            icon = Text(entry.icon, style=muted)
+
+        # Titre + description
+        if cursor:
+            title = Text(entry.title, style=f"bold {accent}")
+        else:
+            title = Text(entry.title, style="bold")
         if not entry.key and entry.description:
             title.append(f"  {entry.description}")
-            title.stylize(
-                themes.muted(),
-                start=len(entry.title) + 2,
-                end=len(entry.title) + 2 + len(entry.description),
-            )
+            title.stylize(muted, start=len(entry.title) + 2, end=len(title.plain))
+
+        # Raccourci clavier (style keycap)
         right = Text()
         if entry.key:
-            right.append(entry.key)
-            right.stylize(
-                f"bold {themes.accent_text()}" if cursor else themes.muted()
-            )
-        return title, right
+            if cursor:
+                right.append(f" {entry.key} ", style=f"bold {accent}")
+            else:
+                right.append(f" {entry.key} ", style=muted)
+
+        return icon, title, right
 
     @staticmethod
     def _build_row(entry: CommandEntry) -> ListItem:
-        title, right = CommandPalette._markup(entry, False)
+        icon, title, right = CommandPalette._markup(entry, False)
         return ListItem(
             Horizontal(
+                Label(icon, classes="cp-row-icon"),
                 Label(title, classes="cp-row-title"),
                 Static(right, classes="cp-row-right"),
                 classes="cp-row",
@@ -210,7 +240,8 @@ class CommandPalette(ModalScreen[None]):
 
     @staticmethod
     def _build_header(section: str) -> ListItem:
-        return ListItem(Label(f"  {section}", classes="cp-section"))
+        icon = _CATEGORY_ICONS.get(section, "•")
+        return ListItem(Label(f"  {icon}  {section}", classes="cp-section"))
 
     def _matching(self, q: str) -> list[CommandEntry]:
         return [
@@ -300,7 +331,8 @@ class CommandPalette(ModalScreen[None]):
             if not isinstance(entry, CommandEntry):
                 continue
             try:
-                title, right = self._markup(entry, i == idx)
+                icon, title, right = self._markup(entry, i == idx)
+                child.query_one(".cp-row-icon", Label).update(icon)
                 child.query_one(".cp-row-title", Label).update(title)
                 child.query_one(".cp-row-right", Static).update(right)
             except Exception:
