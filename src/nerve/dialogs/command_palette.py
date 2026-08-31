@@ -143,7 +143,9 @@ class CommandPalette(ModalScreen[None]):
 
     def compose(self) -> ComposeResult:
         with Vertical(id="cp-dialog"):
-            yield Static("Commands", id="cp-title")
+            with Horizontal(id="cp-title"):
+                yield Static("Commands", id="cp-title-text")
+                yield Static("esc", id="cp-title-esc")
             with Horizontal(id="cp-search"):
                 yield Static("⌕", id="cp-search-icon")
                 yield Input(placeholder="Search commands…", id="cp-input")
@@ -165,9 +167,8 @@ class CommandPalette(ModalScreen[None]):
 
     @staticmethod
     def _markup(entry: CommandEntry, cursor: bool) -> tuple[Text, Text]:
-        # Segments stylés via rich.text.Text uniquement : aucun markup à
-        # échapper (escape() de Textual ignore les balises majuscules type
-        # "[Chat]").
+        # Segments stylés via rich.text.Text uniquement : n'utilisent aucun
+        # markup d'échappement, le raccourci et la description sont bruts.
         if cursor:
             color = themes.accent_text()
             title = Text(entry.title, style=f"bold {color}")
@@ -175,12 +176,13 @@ class CommandPalette(ModalScreen[None]):
             title = Text(entry.title)
         right = Text()
         if entry.key:
-            right.append(f"{entry.key}  ")
-        if entry.suggested:
-            right.append(f"[{entry.category}]")
-        right.stylize(
-            f"bold {themes.accent_text()}" if cursor else themes.muted()
-        )
+            right.append(entry.key)
+            right.stylize(
+                f"bold {themes.accent_text()}" if cursor else themes.muted()
+            )
+        elif entry.description:
+            right.append(entry.description)
+            right.stylize(themes.muted())
         return title, right
 
     @staticmethod
@@ -216,9 +218,13 @@ class CommandPalette(ModalScreen[None]):
             ]
             members.sort(key=lambda c: c.title)
             if members:
+                if rows:  # respiration entre les sections (sauf la première)
+                    rows.append("")
                 rows.append(section)  # en-tête de section
                 rows.extend(members)
         remaining = [c for c in commands if c.category not in SECTIONS]
+        if remaining and rows:
+            rows.append("")
         rows.extend(sorted(remaining, key=lambda c: (c.category, c.title)))
         return rows
 

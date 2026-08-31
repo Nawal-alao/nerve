@@ -557,10 +557,22 @@ CommandPalette {
 
 #cp-title {
     width: 100%;
-    content-align: left top;
+    height: 1;
+    padding-bottom: 1;
+}
+
+#cp-title-text {
+    width: 1fr;
+    content-align: left middle;
     text-style: bold;
     color: $muted;
-    padding-bottom: 1;
+}
+
+#cp-title-esc {
+    dock: right;
+    width: auto;
+    content-align: right middle;
+    color: $muted;
 }
 
 #cp-search {
