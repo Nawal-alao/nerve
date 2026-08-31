@@ -199,22 +199,27 @@ class CommandPalette(ModalScreen[None]):
     def _markup(entry: CommandEntry, cursor: bool) -> tuple[Text, Text, Text]:
         """Construit le markup d'une ligne : (icône, titre+desc, raccourci)."""
         accent = themes.accent()
+        accent_text = themes.accent_text()
         muted = themes.muted()
 
         # Icône
         if cursor:
-            icon = Text(entry.icon, style=f"bold {accent}")
+            icon = Text(entry.icon, style=f"bold {accent_text}")
         else:
             icon = Text(entry.icon, style=muted)
 
         # Titre + description
         if cursor:
-            title = Text(entry.title, style=f"bold {accent}")
+            title = Text(entry.title, style=f"bold {accent_text}")
         else:
             title = Text(entry.title, style="bold")
         if not entry.key and entry.description:
-            title.append(f"  {entry.description}")
-            title.stylize(muted, start=len(entry.title) + 2, end=len(title.plain))
+            desc = f"  {entry.description}"
+            title.append(desc)
+            if cursor:
+                title.stylize(muted, start=len(entry.title) + 2, end=len(title.plain))
+            else:
+                title.stylize(muted, start=len(entry.title) + 2, end=len(title.plain))
 
         # Raccourci clavier (style keycap)
         right = Text()
