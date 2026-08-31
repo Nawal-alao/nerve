@@ -196,44 +196,37 @@ class CommandPalette(ModalScreen[None]):
         return self.query_one("#cp-input", Input).value.strip().lower()
 
     @staticmethod
-    def _markup(entry: CommandEntry, cursor: bool) -> tuple[Text, Text, Text]:
-        """Construit le markup d'une ligne : (icône, titre+desc, raccourci)."""
+    def _markup(entry: CommandEntry, cursor: bool) -> tuple[Text, Text]:
+        """Construit le markup d'une ligne : (titre+desc, raccourci)."""
         accent = themes.accent()
         accent_text = themes.accent_text()
         muted = themes.muted()
 
-        # Icône
-        if cursor:
-            icon = Text(entry.icon, style=f"bold {accent_text}")
-        else:
-            icon = Text(entry.icon, style=muted)
-
-        # Titre + description
+        # Titre + description (séparés par · si pas de raccourci)
         if cursor:
             title = Text(entry.title, style=f"bold {accent_text}")
         else:
             title = Text(entry.title, style="bold")
         if not entry.key and entry.description:
-            desc = f"  {entry.description}"
+            desc = f"  ·  {entry.description}"
             title.append(desc)
             title.stylize(muted, start=len(entry.title) + 2, end=len(title.plain))
 
-        # Raccourci clavier : affichage entre crochets [ctrl+r]
+        # Raccourci clavier entre crochets [ctrl+r]
         right = Text()
         if entry.key:
             if cursor:
-                right.append(f" [{entry.key}]", style=f"bold {accent_text}")
+                right.append(f"[{entry.key}]", style=f"bold {accent_text}")
             else:
-                right.append(f" [{entry.key}]", style=muted)
+                right.append(f"[{entry.key}]", style=muted)
 
-        return icon, title, right
+        return title, right
 
     @staticmethod
     def _build_row(entry: CommandEntry) -> ListItem:
-        icon, title, right = CommandPalette._markup(entry, False)
+        title, right = CommandPalette._markup(entry, False)
         return ListItem(
             Horizontal(
-                Label(icon, classes="cp-row-icon"),
                 Label(title, classes="cp-row-title"),
                 Static(right, classes="cp-row-right"),
                 classes="cp-row",
@@ -242,8 +235,7 @@ class CommandPalette(ModalScreen[None]):
 
     @staticmethod
     def _build_header(section: str) -> ListItem:
-        icon = _CATEGORY_ICONS.get(section, "•")
-        return ListItem(Label(f"  {icon}  {section}", classes="cp-section"))
+        return ListItem(Label(section.upper(), classes="cp-section"))
 
     def _matching(self, q: str) -> list[CommandEntry]:
         return [
@@ -333,8 +325,7 @@ class CommandPalette(ModalScreen[None]):
             if not isinstance(entry, CommandEntry):
                 continue
             try:
-                icon, title, right = self._markup(entry, i == idx)
-                child.query_one(".cp-row-icon", Label).update(icon)
+                title, right = self._markup(entry, i == idx)
                 child.query_one(".cp-row-title", Label).update(title)
                 child.query_one(".cp-row-right", Static).update(right)
             except Exception:
