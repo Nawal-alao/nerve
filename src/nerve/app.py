@@ -8,9 +8,12 @@ widgets.py) — voir NOTES.md pour le détail du découpage.
 
 from __future__ import annotations
 
+import argparse
+from typing import Sequence
+
 from textual.app import App
 
-from . import themes
+from . import __version__, themes
 from .config import Credentials, StoreLockedError, skip_splash
 from .dialogs.command_palette import CommandPalette
 from .dialogs.store_unlock import StoreUnlockDialog
@@ -100,7 +103,26 @@ class NerveApp(App):
         await self.push_screen(ChatScreen(client))
 
 
-def run() -> None:
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="nerve",
+        description="nerve — un client Matrix TUI premium en Python "
+        "(matrix-nio + Textual).",
+    )
+    parser.add_argument(
+        "-V",
+        "--version",
+        action="version",
+        version=f"nerve {__version__}",
+        help="show the version and exit",
+    )
+    return parser
+
+
+def run(argv: Sequence[str] | None = None) -> None:
+    # `--version`/`-V`/`--help` sont gérés par argparse (action="version"
+    # imprime et sort, sans lancer l'app Textual).
+    _build_parser().parse_args(argv)
     NerveApp().run()
 
 
