@@ -176,7 +176,8 @@ class CommandPalette(ModalScreen[None]):
         right = Text()
         if entry.key:
             right.append(f"{entry.key}  ")
-        right.append(f"[{entry.category}]")
+        if entry.suggested:
+            right.append(f"[{entry.category}]")
         right.stylize(
             f"bold {themes.accent_text()}" if cursor else themes.muted()
         )
