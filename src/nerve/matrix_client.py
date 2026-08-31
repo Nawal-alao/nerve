@@ -23,6 +23,7 @@ from nio import (
     KeyVerificationStart,
     LoginResponse,
     MatrixRoom,
+    RoomMessageImage,
     RoomMessageText,
     UploadResponse,
 )
@@ -31,6 +32,7 @@ from nio.exceptions import LocalProtocolError
 from .config import Credentials, decrypt_store, encrypt_store, ensure_store_dir, remove_store
 
 MessageHandler = Callable[[MatrixRoom, RoomMessageText], Awaitable[None]]
+ImageHandler = Callable[[MatrixRoom, RoomMessageImage], Awaitable[None]]
 # Invitation reçue : (room_id, salle, inviteur)
 InviteHandler = Callable[[str, MatrixRoom, str], Awaitable[None]]
 # Vérification par emoji : (transaction_id, user_id, device_id, emojis)
@@ -46,6 +48,7 @@ class NerveClient:
     client: AsyncClient = field(init=False)
     _sync_task: asyncio.Task | None = field(init=False, default=None)
     on_message: MessageHandler | None = None
+    on_image: ImageHandler | None = None
     on_invite: InviteHandler | None = None
     on_sas_request: SasRequestHandler | None = None
     on_send_error: SendErrorHandler | None = None
@@ -70,6 +73,7 @@ class NerveClient:
         self._store_loaded = False
 
         self.client.add_event_callback(self._handle_message, RoomMessageText)
+        self.client.add_event_callback(self._handle_image, RoomMessageImage)
         self.client.add_event_callback(self._handle_invite, InviteMemberEvent)
         self.client.add_to_device_callback(
             self._handle_verification, (KeyVerificationEvent,)
@@ -279,6 +283,10 @@ class NerveClient:
     async def _handle_message(self, room: MatrixRoom, event: RoomMessageText) -> None:
         if self.on_message is not None:
             await self.on_message(room, event)
+
+    async def _handle_image(self, room: MatrixRoom, event: RoomMessageImage) -> None:
+        if self.on_image is not None:
+            await self.on_image(room, event)
 
     async def _handle_invite(self, room: MatrixRoom, event: InviteMemberEvent) -> None:
         if event.state_key != self.client.user_id:
