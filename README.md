@@ -35,17 +35,46 @@ keyring entry without an explicit `--force-delete-old`.
 
 ## Installation
 
+Nerve requires **Linux or macOS** with **Python ≥ 3.10**. The installer
+checks for these, installs the `libolm` encryption dependency and `pipx`,
+then installs Nerve:
+
 ```bash
-cd nerve
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
+curl -fsSL https://raw.githubusercontent.com/Nawal-alao/nerve/main/install.sh | sh
 ```
 
-On Arch, `libolm` must be installed for encryption:
+Then verify:
 
 ```bash
-sudo pacman -S libolm
+nerve --version
+```
+
+### Windows (via WSL2)
+
+There is **no native Windows build**. On Windows, install Nerve inside
+[WSL2](https://learn.microsoft.com/windows/wsl/install) (Ubuntu
+recommended), then run the install command above from your WSL terminal.
+
+### Manual installation
+
+Prefer not to `curl | sh`? Do the equivalent steps yourself:
+
+```bash
+# 1. Install the libolm encryption library (one of, depending on your OS)
+#    macOS:  brew install libolm
+#    Debian/Ubuntu:  sudo apt-get install -y libolm-dev
+#    Fedora:  sudo dnf install -y libolm-devel
+#    Arch:    sudo pacman -S --noconfirm libolm
+
+# 2. Install pipx (or use `uv tool install` if you already use uv)
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+
+# 3. Install Nerve
+pipx install git+https://github.com/Nawal-alao/nerve.git
+
+# 4. Verify
+nerve --version
 ```
 
 ## Run
