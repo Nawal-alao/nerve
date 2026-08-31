@@ -216,18 +216,15 @@ class CommandPalette(ModalScreen[None]):
         if not entry.key and entry.description:
             desc = f"  {entry.description}"
             title.append(desc)
-            if cursor:
-                title.stylize(muted, start=len(entry.title) + 2, end=len(title.plain))
-            else:
-                title.stylize(muted, start=len(entry.title) + 2, end=len(title.plain))
+            title.stylize(muted, start=len(entry.title) + 2, end=len(title.plain))
 
-        # Raccourci clavier (style keycap)
+        # Raccourci clavier : affichage entre crochets [ctrl+r]
         right = Text()
         if entry.key:
             if cursor:
-                right.append(f" {entry.key} ", style=f"bold {accent}")
+                right.append(f" [{entry.key}]", style=f"bold {accent_text}")
             else:
-                right.append(f" {entry.key} ", style=muted)
+                right.append(f" [{entry.key}]", style=muted)
 
         return icon, title, right
 

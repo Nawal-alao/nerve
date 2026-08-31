@@ -680,7 +680,7 @@ CommandPalette {
     border: none;
     height: auto;
     max-height: 100%;
-    padding: 0;
+    padding: 0 0 1 0;
     scrollbar-size: 1 1;
     scrollbar-color: $border;
     scrollbar-background: transparent;
@@ -688,14 +688,15 @@ CommandPalette {
 
 #cp-list ListItem {
     padding: 0 1;
-    height: 1;
+    margin-top: 0;
+    min-height: 1;
     background: transparent;
     color: $text;
 }
 
 .cp-row {
     width: 1fr;
-    height: 1;
+    min-height: 1;
     background: transparent;
     align: left middle;
 }
@@ -716,20 +717,20 @@ CommandPalette {
     padding-left: 1;
 }
 
-/* Raccourci clavier (keycap) */
+/* Raccourci clavier (style keycap avec crochets) */
 .cp-row-right {
     dock: right;
     width: auto;
     content-align: right middle;
-    background: $surface;
-    padding: 0 1;
     color: $muted;
+    background: transparent;
 }
 
 /* -- Headers de sections -------------------------------------------- */
 
 .cp-section {
     padding: 0 1;
+    margin-top: 1;
     height: 1;
     width: 100%;
     color: $section;
@@ -746,13 +747,12 @@ CommandPalette {
     color: $accent_text;
 }
 
-/* Le keycap reste distinct à la sélection : pas de changement de fond */
+/* Keycap à la sélection : texte en accent */
 #cp-list ListItem.-highlight .cp-row-right,
 #cp-list:focus > ListItem.-highlight .cp-row-right,
 #cp-list ListItem:hover .cp-row-right {
-    background: $surface;
-    color: $primary;
-    border: solid $primary;
+    color: $accent_text;
+    background: transparent;
 }
 
 /* -- Empty state ---------------------------------------------------- */
