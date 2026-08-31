@@ -84,6 +84,20 @@ class Credentials:
             access_token=token or "",
         )
 
+    @classmethod
+    def load_for(cls, user_id: str, homeserver: str, device_id: str) -> "Credentials | None":
+        """Charge les creds pour un compte spécifique (multi-compte)."""
+        token = keyring.get_password(
+            KEYRING_SERVICE,
+            f"{user_id}:{_USERNAME_ACCESS_TOKEN}",
+        )
+        return cls(
+            homeserver=homeserver,
+            user_id=user_id,
+            device_id=device_id,
+            access_token=token or "",
+        )
+
     def save(self) -> None:
         CONFIG_DIR.mkdir(parents=True, exist_ok=True)
         # Métadonnées non sensibles.

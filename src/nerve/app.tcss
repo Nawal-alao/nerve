@@ -197,6 +197,47 @@ ToastRack {
 }
 
 /* =====================================================================
+   Sélection de compte (multi-account)
+   ===================================================================== */
+
+#accounts-header {
+    padding: 0 1;
+    color: $muted;
+    text-style: bold;
+}
+
+.account-list {
+    height: auto;
+    max-height: 12;
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+.account-list ListItem {
+    padding: 0 1;
+    height: 2;
+    background: transparent;
+    color: $text;
+}
+
+.account-list ListItem.-highlight,
+.account-list ListItem:hover {
+    background: $hover;
+}
+
+#account-actions {
+    height: 3;
+    width: 100%;
+    margin-top: 1;
+}
+
+#account-actions Button {
+    margin-right: 1;
+    min-width: 14;
+}
+
+/* =====================================================================
    Chat — barre d'état en haut (discrète : fusionnée au fond, hairline)
    ===================================================================== */
 

@@ -111,6 +111,13 @@ COMMANDS: list[CommandEntry] = [
         "System",
     ),
     CommandEntry(
+        "switch_account",
+        "Switch account",
+        "Return to account selection",
+        "",
+        "System",
+    ),
+    CommandEntry(
         "logout",
         "Sign out",
         "Close the session and erase local data",
@@ -377,6 +384,12 @@ class CommandPalette(ModalScreen[None]):
                 await app.push_screen(JoinRoomDialog(chat))
             elif cmd_id == "recovery":
                 await app.push_screen(RecoveryDialog(chat))
+            elif cmd_id == "switch_account":
+                from ..screens.account_picker import AccountPickerScreen
+
+                asyncio.create_task(
+                    self._switch_account(app, chat)
+                )
             elif cmd_id == "logout":
                 # Changer d'écran à l'intérieur d'un callback awaité bloque
                 # (attente du close du screen courant depuis son propre pump).
@@ -387,3 +400,11 @@ class CommandPalette(ModalScreen[None]):
         # pour que le focus se pose sur l'écran de chat après le retrait.
         # Le callback est de toute façon awaité par la file d'appels du screen.
         self.app.call_after_refresh(_go)
+
+    async def _switch_account(self, app, chat) -> None:
+        """Revient à l'écran de sélection de compte."""
+        from ..screens.account_picker import AccountPickerScreen
+
+        # Déconnecter le compte actuel
+        await chat.client.logout()
+        await app.switch_screen(AccountPickerScreen())

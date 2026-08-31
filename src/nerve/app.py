@@ -14,10 +14,12 @@ from typing import Sequence
 from textual.app import App
 
 from . import __version__, themes
+from .accounts import get_manager
 from .config import Credentials, StoreLockedError, skip_splash
 from .dialogs.command_palette import CommandPalette
 from .dialogs.store_unlock import StoreUnlockDialog
 from .matrix_client import NerveClient
+from .screens.account_picker import AccountPickerScreen
 from .screens.chat import ChatScreen
 from .screens.login import LoginScreen
 from .screens.splash import SplashScreen
@@ -77,6 +79,11 @@ class NerveApp(App):
 
     async def begin(self) -> None:
         """Après le splash : login ou reprise du chat selon les creds."""
+        manager = get_manager()
+        # Si plusieurs comptes sont enregistrés, proposer le sélecteur
+        if manager.count() > 1:
+            await self.push_screen(AccountPickerScreen())
+            return
         creds = Credentials.load()
         if creds is None:
             await self.push_screen(LoginScreen())

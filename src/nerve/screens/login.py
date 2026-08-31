@@ -10,6 +10,7 @@ from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Input, Label, Rule, Static
 
+from ..accounts import get_manager
 from ..matrix_client import NerveClient
 
 if TYPE_CHECKING:
@@ -95,5 +96,7 @@ class LoginScreen(Screen):
 
         self._set_status("Connected, opening the chat…", kind="success")
         creds.save()
+        # Enregistrer dans le gestionnaire multi-comptes
+        get_manager().add(creds)
         app: NerveApp = self.app  # type: ignore[assignment]
         await app.start_chat(creds)
