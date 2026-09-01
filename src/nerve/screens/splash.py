@@ -1,4 +1,4 @@
-"""Splash screen — bannière "NERVE" en fonte smslant, dégradé de thème sobre
+"""Splash screen — bannière "NERVE" en bloc ASCII fixe, dégradé de thème sobre
 (muted → text, lettre initiale en primary), fondu du logo, typage discret de
 la tagline puis curseur terminal subtil, auto-transition vers login/chat.
 Aucune couleur en dur : tout vient des tokens du thème actif."""
@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import asyncio
 
-from pyfiglet import Figlet
 from rich.style import Style
 from rich.text import Text
 from textual.app import ComposeResult
@@ -49,13 +48,24 @@ def _to_rgb(hex_color: str) -> tuple[int, int, int] | None:
         return None
 
 
+# Bloc ASCII fixe "NERVE" (6 lignes × 44 colonnes). Il ne provient plus
+# d'une police générée (pyfiglet) : tracé à la main, bon pour les deux
+# thèmes. Fixe par nature → pas de rétrécissement sous 44 colonnes.
+_LOGO_ART = r"""███╗   ██╗███████╗██████╗ ██╗   ██╗███████╗
+████╗  ██║██╔════╝██╔══██╗██║   ██║██╔════╝
+██╔██╗ ██║█████╗  ██████╔╝██║   ██║█████╗  
+██║╚██╗██║██╔══╝  ██╔══██╗╚██╗ ██╔╝██╔══╝  
+██║ ╚████║███████╗██║  ██║ ╚████╔╝ ███████╗
+╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝  ╚═╝  ╚══════╝"""
+
+
 def _splash_art() -> Text:
-    """Bannière 'NERVE' en fonte smslant : dégradé sobre $muted → $text,
+    """Bannière 'NERVE' en bloc ASCII fixe : dégradé sobre $muted → $text,
     avec la lettre initiale accentuée en $primary (signal discret)."""
     spec = themes.spec()
     start = _to_rgb(spec.muted)
     end = _to_rgb(spec.text)
-    art = Figlet(font="smslant").renderText("NERVE").rstrip("\n")
+    art = _LOGO_ART.rstrip("\n")
     if start is None or end is None:
         # Garde-fou : le thème est invalide, on rend le texte sans couleur.
         return Text(art)
@@ -126,14 +136,18 @@ class SplashScreen(Screen):
         """Adaptation discrète aux petits terminaux : le CSS Textual n'a pas
         de media queries, on bascule donc des classes compacts en Python.
 
-        Le bloc complet (logo + tagline + hint + marges) tient en 16 lignes ;
-        en dessous on serre d'abord le hint ('splash-squeeze', 14-15 lignes),
-        puis on le masque et resserre la tagline ('splash-tiny', < 14)."""
+        Le bloc complet (logo + tagline + hint + marges) tient en 17 lignes ;
+        en dessous on serre d'abord le hint ('splash-squeeze', 15-16 lignes),
+        puis on le masque et resserre la tagline ('splash-tiny', < 15).
+        En largeur, le logo est un bloc fixe de 43 colonnes : sous 44 on le
+        cache ('-splash-no-logo') plutôt que de tronquer son bord droit."""
+        if self.size.width < 44:
+            self.add_class("-splash-no-logo")
         h = self.size.height
-        if h >= 16:
+        if h >= 17:
             return
         self.add_class("-splash-squeeze")
-        if h < 14:
+        if h < 15:
             self.add_class("-splash-tiny")
 
     def _animate_logo(self) -> None:

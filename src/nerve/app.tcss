@@ -458,6 +458,12 @@ SplashScreen {
     display: none;
 }
 
+/* Sous ~43 colonnes le bloc ASCII fixe (43 col de large) serait coupé à
+   droite : on masque le logo plutôt que de casser les lettres. */
+.-splash-no-logo #splash-art {
+    display: none;
+}
+
 /* -- Sidebar droite (panneaux contextuels Room / Session) -------------- */
 
 #sidebar {

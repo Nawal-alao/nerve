@@ -34,6 +34,35 @@ else
     _RESET=''
 fi
 
+# ---------------------------------------------------------------------------
+# Bannière ASCII "NERVE" (bloc fixe, pas de police générée). La couleur est
+# gérée par les variables ci-dessus (déjà "éteintes" hors tty) ; seule la
+# locale indique si les caractères de dessin de boîte sont sûrs à imprimer.
+# ---------------------------------------------------------------------------
+banner() {
+    case "${LANG:-}${LC_ALL:-}" in
+        *UTF-8*|*utf8*) banner_ok=1 ;;
+        *) banner_ok=0 ;;
+    esac
+    if [ "$banner_ok" = 1 ]; then
+        printf '%b' "$_BOLD"
+        cat <<'LOGO'
+
+███╗   ██╗███████╗██████╗ ██╗   ██╗███████╗
+████╗  ██║██╔════╝██╔══██╗██║   ██║██╔════╝
+██╔██╗ ██║█████╗  ██████╔╝██║   ██║█████╗  
+██║╚██╗██║██╔══╝  ██╔══██╗╚██╗ ██╔╝██╔══╝  
+██║ ╚████║███████╗██║  ██║ ╚████╔╝ ███████╗
+╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝  ╚═╝  ╚══════╝
+
+LOGO
+        printf '%b\n' "$_RESET"
+    else
+        printf '%b\n' "${_BOLD}NERVE${_RESET}"
+    fi
+}
+banner
+
 info()  { printf '%b%b%s%b\n' "$_GREEN" "  • " "$1" "$_RESET"; }
 step()  { printf '%b%b%s%b\n' "$_BOLD" "==> " "$1" "$_RESET"; }
 warn()  { printf '%b%b%s%b\n' "$_YELLOW" "WARN " "$1" "$_RESET"; }
