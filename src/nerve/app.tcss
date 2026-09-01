@@ -582,6 +582,15 @@ SplashScreen {
     color: $text;
 }
 
+/* Indicateur de typing — discret, au-dessus du composer */
+#typing-status {
+    display: none;
+    height: 1;
+    padding: 0 1;
+    color: $muted;
+    background: transparent;
+}
+
 /* =====================================================================
    Palette de commandes (style opencode : dialogue centré "Commands")
    Premium flat : minimaliste, lisible, bien structuré.

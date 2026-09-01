@@ -82,6 +82,10 @@ class ChatScreen(Screen):
         self._nb_time: float | None = None
         # Timer du statut (sync/clock) — stocké pour nettoyage sur unmount.
         self._status_timer: Timer | None = None
+        # Indicateurs de typing (server-authoritative : chaque événement
+        # contient la liste COMPLÈTE des utilisateurs en train de taper).
+        self._typing_users: dict[str, set[str]] = {}
+        self._typing_last_seen: dict[str, float] = {}
 
     def compose(self) -> ComposeResult:
         with Horizontal(id="top-bar"):
@@ -96,6 +100,7 @@ class ChatScreen(Screen):
             with Vertical(id="chat-area"):
                 yield RichLog(id="timeline", wrap=True, highlight=True, markup=True)
                 yield ListView(id="suggestion-list")
+                yield Static("", id="typing-status")
                 with Horizontal(id="input-bar"):
                     yield Static(">", id="input-prompt")
                     yield Input(
@@ -112,6 +117,7 @@ class ChatScreen(Screen):
     async def on_mount(self) -> None:
         self.client.on_message = self._handle_incoming_message
         self.client.on_image = self._handle_incoming_image
+        self.client.on_typing = self._handle_typing
         self.client.on_invite = self._show_invite_dialog
         self.client.on_sas_request = self._show_sas_dialog
         self.client.on_send_error = self._on_send_error
@@ -175,6 +181,56 @@ class ChatScreen(Screen):
         self.query_one("#sync-status", Static).update(f"[{color}]●[/{color}] {label}")
         self.query_one("#clock", Static).update(time.strftime("%H:%M"))
         self._refresh_sidebar()
+        self._purge_typing()
+
+    def _purge_typing(self) -> None:
+        """Nettoie les typing expirés (filet de sécurité, 5s sans événement)."""
+        now = time.monotonic()
+        expired = [
+            rid
+            for rid, last_seen in self._typing_last_seen.items()
+            if now - last_seen > 5.0
+        ]
+        for rid in expired:
+            self._typing_users.pop(rid, None)
+            self._typing_last_seen.pop(rid, None)
+        if expired and self.active_room_id in expired:
+            self._refresh_typing_display()
+
+    def _handle_typing(self, room_id: str, user_ids: list[str]) -> None:
+        """Gère un événement typing (server-authoritative, liste complète)."""
+        own_id = self.client.client.user_id
+        typing = {uid for uid in user_ids if uid != own_id}
+        self._typing_users[room_id] = typing
+        self._typing_last_seen[room_id] = time.monotonic()
+        if room_id == self.active_room_id:
+            self._refresh_typing_display()
+
+    def _refresh_typing_display(self) -> None:
+        """Met à jour le widget de typing pour la room active."""
+        typing = self._typing_users.get(self.active_room_id, set())
+        widget = self.query_one("#typing-status", Static)
+        if not typing:
+            widget.update("")
+            widget.styles.display = "none"
+            return
+        names = []
+        rooms = self.client.rooms()
+        room = rooms.get(self.active_room_id)
+        for uid in typing:
+            if room is not None:
+                name = room.user_name(uid) or uid
+            else:
+                name = uid
+            names.append(name)
+        if len(names) == 1:
+            text = f"{names[0]} is typing…"
+        elif len(names) == 2:
+            text = f"{names[0]} and {names[1]} are typing…"
+        else:
+            text = f"{len(names)} people are typing…"
+        widget.update(f"[dim]{escape(text)}[/dim]")
+        widget.styles.display = "block"
 
     def _refresh_sidebar(self) -> None:
         """Re-synthetise les deux panneaux contextuels (Room / Session)."""
@@ -250,6 +306,7 @@ class ChatScreen(Screen):
         for line in self.message_log.get(room_id, []):
             timeline.write(line)
         self._refresh_sidebar()
+        self._refresh_typing_display()
         self._set_composer_enabled(True)
         self.query_one("#composer", Input).focus()
 

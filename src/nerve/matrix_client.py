@@ -25,6 +25,7 @@ from nio import (
     MatrixRoom,
     RoomMessageImage,
     RoomMessageText,
+    TypingNoticeEvent,
     UploadResponse,
 )
 from nio.exceptions import LocalProtocolError
@@ -33,6 +34,7 @@ from .config import Credentials, decrypt_store, encrypt_store, ensure_store_dir,
 
 MessageHandler = Callable[[MatrixRoom, RoomMessageText], Awaitable[None]]
 ImageHandler = Callable[[MatrixRoom, RoomMessageImage], Awaitable[None]]
+TypingHandler = Callable[[str, list[str]], Awaitable[None]]
 # Invitation reçue : (room_id, salle, inviteur)
 InviteHandler = Callable[[str, MatrixRoom, str], Awaitable[None]]
 # Vérification par emoji : (transaction_id, user_id, device_id, emojis)
@@ -49,6 +51,7 @@ class NerveClient:
     _sync_task: asyncio.Task | None = field(init=False, default=None)
     on_message: MessageHandler | None = None
     on_image: ImageHandler | None = None
+    on_typing: TypingHandler | None = None
     on_invite: InviteHandler | None = None
     on_sas_request: SasRequestHandler | None = None
     on_send_error: SendErrorHandler | None = None
@@ -74,6 +77,7 @@ class NerveClient:
 
         self.client.add_event_callback(self._handle_message, RoomMessageText)
         self.client.add_event_callback(self._handle_image, RoomMessageImage)
+        self.client.add_event_callback(self._handle_typing, TypingNoticeEvent)
         self.client.add_event_callback(self._handle_invite, InviteMemberEvent)
         self.client.add_to_device_callback(
             self._handle_verification, (KeyVerificationEvent,)
@@ -287,6 +291,10 @@ class NerveClient:
     async def _handle_image(self, room: MatrixRoom, event: RoomMessageImage) -> None:
         if self.on_image is not None:
             await self.on_image(room, event)
+
+    async def _handle_typing(self, room: MatrixRoom, event: TypingNoticeEvent) -> None:
+        if self.on_typing is not None:
+            await self.on_typing(room.room_id, event.users)
 
     async def _handle_invite(self, room: MatrixRoom, event: InviteMemberEvent) -> None:
         if event.state_key != self.client.user_id:
