@@ -173,11 +173,8 @@ class CommandPalette(ModalScreen[None]):
 
     def compose(self) -> ComposeResult:
         with Vertical(id="cp-dialog"):
-            with Horizontal(id="cp-title"):
-                yield Static("Commands", id="cp-title-text")
-                yield Static("esc", id="cp-title-esc")
             with Horizontal(id="cp-search"):
-                yield Static("⌕", id="cp-search-icon")
+                yield Static(">", id="cp-search-icon")
                 yield Input(placeholder="Search commands…", id="cp-input")
             yield ListView(id="cp-list")
             yield Static("No command found", id="cp-empty")
@@ -235,7 +232,10 @@ class CommandPalette(ModalScreen[None]):
 
     @staticmethod
     def _build_header(section: str) -> ListItem:
-        return ListItem(Label(section.upper(), classes="cp-section"))
+        return ListItem(
+            Label(section.upper(), classes="cp-section"),
+            classes="cp-header-item",
+        )
 
     def _matching(self, q: str) -> list[CommandEntry]:
         return [

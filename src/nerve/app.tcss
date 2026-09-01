@@ -617,39 +617,12 @@ CommandPalette {
     padding: 0;
 }
 
-/* -- Titre ---------------------------------------------------------- */
-
-#cp-title {
-    width: 100%;
-    height: 1;
-    padding: 0 1;
-    background: $pane;
-    border-bottom: solid $border;
-}
-
-#cp-title-text {
-    width: 1fr;
-    content-align: left middle;
-    text-style: bold;
-    color: $text;
-}
-
-#cp-title-esc {
-    dock: right;
-    width: auto;
-    content-align: right middle;
-    padding: 0 1;
-    color: $muted;
-    text-style: bold;
-}
-
 /* -- Recherche ------------------------------------------------------ */
 
 #cp-search {
     height: 3;
     padding: 0 1;
     background: $pane;
-    border-bottom: solid $border;
 }
 
 #cp-search:focus-within {
@@ -730,7 +703,16 @@ CommandPalette {
     color: $section;
     text-style: bold;
     background: transparent;
-    margin-top: 1;
+}
+
+#cp-list ListItem.cp-header-item {
+    height: 2;
+    padding-top: 1;
+}
+
+#cp-list ListItem.cp-header-item:first-of-type {
+    padding-top: 0;
+    height: 1;
 }
 
 /* -- Sélection ------------------------------------------------------ */
