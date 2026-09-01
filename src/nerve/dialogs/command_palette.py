@@ -255,13 +255,9 @@ class CommandPalette(ModalScreen[None]):
             ]
             members.sort(key=lambda c: c.title)
             if members:
-                if rows:  # respiration entre les sections (sauf la première)
-                    rows.append("")
                 rows.append(section)  # en-tête de section
                 rows.extend(members)
         remaining = [c for c in commands if c.category not in SECTIONS]
-        if remaining and rows:
-            rows.append("")
         rows.extend(sorted(remaining, key=lambda c: (c.category, c.title)))
         return rows
 
