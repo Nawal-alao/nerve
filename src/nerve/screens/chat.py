@@ -197,7 +197,7 @@ class ChatScreen(Screen):
         if expired and self.active_room_id in expired:
             self._refresh_typing_display()
 
-    def _handle_typing(self, room_id: str, user_ids: list[str]) -> None:
+    async def _handle_typing(self, room_id: str, user_ids: list[str]) -> None:
         """Gère un événement typing (server-authoritative, liste complète)."""
         own_id = self.client.client.user_id
         typing = {uid for uid in user_ids if uid != own_id}
