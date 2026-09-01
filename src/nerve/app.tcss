@@ -712,8 +712,7 @@ CommandPalette {
     padding: 0 1;
     height: 1;
     width: 100%;
-    color: $muted;
-    opacity: 0.6;
+    color: $section;
     text-style: bold;
     background: transparent;
     margin-top: 1;
