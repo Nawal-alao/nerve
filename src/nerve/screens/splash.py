@@ -1,6 +1,6 @@
 """Splash screen — bannière "NERVE" en bloc ASCII fixe, dégradé de thème sobre
-(muted → text, lettre initiale en primary), fondu du logo, typage discret de
-la tagline, auto-transition vers login/chat.
+(muted → text, lettre initiale en primary), révélation en cascade du logo,
+typage discret de la tagline, auto-transition vers login/chat.
 Aucune couleur en dur : tout vient des tokens du thème actif."""
 
 from __future__ import annotations
@@ -20,9 +20,9 @@ from .. import __version__, themes
 
 # --- Constantes d'animation (aucune couleur ici : viole la règle absolue) ---
 _TAGLINE = "secure · private · minimal"   # texte tapé dans la tagline
-_FADE_MS = 0.5                            # durée du fondu d'apparition du logo
-_FADE_STEPS = 12                          # trames du fondu (styles.opacity)
-_TAG_WAIT = 0.3                           # pause entre fondu et frappe
+_FADE_MS = 0.5                            # durée de la révélation du logo
+_FADE_STEPS = 12                          # trames du balayage (colonne→colonne)
+_TAG_WAIT = 0.3                           # pause entre révélation et frappe
 _TAG_TICK = 0.05                          # cadence d'apparition des lettres
 _AUTO_MS = 3.0                            # auto-transition (laisse le temps
                                           # de voir la séquence complète)
@@ -57,29 +57,55 @@ _LOGO_ART = r"""███╗   ██╗███████╗█████�
 ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝  ╚═╝  ╚══════╝"""
 
 
-def _splash_art() -> Text:
-    """Bannière 'NERVE' en bloc ASCII fixe : dégradé sobre $muted → $text,
-    avec la lettre initiale accentuée en $primary (signal discret)."""
+_LOGO_COLS = max(len(line) for line in _LOGO_ART.rstrip("\n").split("\n"))
+
+
+def _splash_art(reveal_cols: int | None = None) -> Text:
+    """Bannière 'NERVE' : dégradé sobre $muted → $text, glyphe "N" (colonnes
+    0-9) accentué en $primary sur CHACUNE des 6 lignes (signal discret).
+
+    Si `reveal_cols` est fourni, les colonnes ≥ reveal_cols sont rendues en
+    $bg (invisibles) : balayage net de gauche à droite pour la révélation."""
     spec = themes.spec()
     start = _to_rgb(spec.muted)
     end = _to_rgb(spec.text)
     art = _LOGO_ART.rstrip("\n")
+    lines = art.split("\n")
     if start is None or end is None:
         # Garde-fou : le thème est invalide, on rend le texte sans couleur.
-        return Text(art)
-    lines = art.split("\n")
-    total = sum(len(line) for line in lines)
-    out = Text()
-    pos = 0.0
+        out = Text(art)
+    else:
+        total = sum(len(line) for line in lines)
+        out = Text()
+        pos = 0.0
+        for idx, line in enumerate(lines):
+            for ch in line:
+                r, g, b = _lerp(pos / total if total else 0.0, start, end)
+                out.append(ch, style=f"rgb({r},{g},{b})")
+                pos += 1.0
+            if idx < len(lines) - 1:
+                out.append("\n")
+
+    # Accent : le glyphe "N" occupe les colonnes 0-9 de chaque ligne. On
+    # stylize CHAQUE ligne, offset absolu = somme des longueurs précédentes
+    # (+1 par "\n" déjà ajouté), pas seulement le premier caractère.
+    line_start = 0
     for idx, line in enumerate(lines):
-        for ch in line:
-            r, g, b = _lerp(pos / total if total else 0.0, start, end)
-            out.append(ch, style=f"rgb({r},{g},{b})")
-            pos += 1.0
-        if idx < len(lines) - 1:
-            out.append("\n")
-    # Accent : la première lettre du logo passe en $primary.
-    out.stylize(spec.primary, 0, 1)
+        out.stylize(spec.primary, line_start, line_start + 10)
+        line_start += len(line) + 1
+
+    # Révélation : colonnes pas encore révélées → $bg (invisibles), les
+    # colonnes déjà révélées gardent leur dégradé/accent.
+    if reveal_cols is not None:
+        line_start = 0
+        for idx, line in enumerate(lines):
+            if reveal_cols < len(line):
+                out.stylize(
+                    spec.bg,
+                    line_start + reveal_cols,
+                    line_start + len(line),
+                )
+            line_start += len(line) + 1
     return out
 
 
@@ -108,7 +134,7 @@ class SplashScreen(Screen):
     def compose(self) -> ComposeResult:
         with Vertical(id="splash-wrap"):
             with Vertical(id="splash-group"):
-                yield Static(_splash_art(), id="splash-art")
+                yield Static(_splash_art(0), id="splash-art")  # révélée à l'animation
                 yield Static("", id="splash-sub")  # remplie par la frappe
                 yield Static("enter   continue\nesc     skip", id="splash-hint")
             yield Static("nerve // encrypted", id="splash-detail")
@@ -147,14 +173,17 @@ class SplashScreen(Screen):
             self.add_class("-splash-tiny")
 
     def _animate_logo(self) -> None:
-        """Fondu d'apparition du logo, puis enchaîne la frappe de la tagline.
+        """Révélation du logo colonne par colonne (gauche → droite), puis
+        enchaîne la frappe de la tagline.
 
-        Le fondu est piloté manuellement via `styles.opacity` (la propriété
-        `opacity` du widget n'est pas animable par `.animate()` dans cette
-        version de Textual, pas de setter) — trame à trame, sans dépendance.
-        Le timer est stocké et stoppé explicitement à la dernière trame."""
+        Les colonnes pas encore révélées sont rendues en $bg (invisibles,
+        même technique que le curseur éteint de la tagline) : un balayage
+        net plutôt qu'un fondu d'opacité flou. Aucun nouveau timer :
+        _fade_timer garde sa cadence existante, seule la logique de rendu
+        par trame change. Le timer est stocké et stoppé explicitement à la
+        dernière trame."""
         self._art = self.query_one("#splash-art", Static)
-        self._art.styles.opacity = 0.0
+        self._art.update(_splash_art(0))
         self._fade_step = 0
         self._fade_timer = self.set_interval(_FADE_MS / _FADE_STEPS, self._fade_tick)
 
@@ -162,10 +191,12 @@ class SplashScreen(Screen):
         if not self.is_mounted:
             return
         self._fade_step += 1
-        self._art.styles.opacity = min(1.0, self._fade_step / _FADE_STEPS)
+        # Colonnes révélées à cette trame (sur les _LOGO_COLS au total, arrondi
+        # vers le haut pour finir exactement sur le logo complet).
+        revealed = min(_LOGO_COLS, (_LOGO_COLS * self._fade_step + _FADE_STEPS - 1) // _FADE_STEPS)
+        self._art.update(_splash_art(revealed))
         if self._fade_step < _FADE_STEPS:
             return
-        self._art.styles.opacity = 1.0
         self._stop_timer(self._fade_timer)
         # Chaîne en AVAL, une seule fois : pause puis frappe de la tagline.
         self._wait_timer = self.set_timer(_TAG_WAIT, self._begin_typing)
