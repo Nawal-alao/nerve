@@ -61,8 +61,8 @@ _LOGO_COLS = max(len(line) for line in _LOGO_ART.rstrip("\n").split("\n"))
 
 
 def _splash_art(reveal_cols: int | None = None) -> Text:
-    """Bannière 'NERVE' : dégradé sobre $muted → $text, glyphe "N" (colonnes
-    0-9) accentué en $primary sur CHACUNE des 6 lignes (signal discret).
+    """Bannière 'NERVE' : dégradé sobre $muted → $text sur tout le logo,
+    sans lettre accentuée.
 
     Si `reveal_cols` est fourni, les colonnes ≥ reveal_cols sont rendues en
     $bg (invisibles) : balayage net de gauche à droite pour la révélation."""
@@ -86,16 +86,8 @@ def _splash_art(reveal_cols: int | None = None) -> Text:
             if idx < len(lines) - 1:
                 out.append("\n")
 
-    # Accent : le glyphe "N" occupe les colonnes 0-9 de chaque ligne. On
-    # stylize CHAQUE ligne, offset absolu = somme des longueurs précédentes
-    # (+1 par "\n" déjà ajouté), pas seulement le premier caractère.
-    line_start = 0
-    for idx, line in enumerate(lines):
-        out.stylize(spec.primary, line_start, line_start + 10)
-        line_start += len(line) + 1
-
     # Révélation : colonnes pas encore révélées → $bg (invisibles), les
-    # colonnes déjà révélées gardent leur dégradé/accent.
+    # colonnes déjà révélées gardent leur dégradé.
     if reveal_cols is not None:
         line_start = 0
         for idx, line in enumerate(lines):
