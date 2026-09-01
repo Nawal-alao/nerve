@@ -1,6 +1,6 @@
 """Splash screen — bannière "NERVE" en bloc ASCII fixe, dégradé de thème sobre
 (muted → text, lettre initiale en primary), fondu du logo, typage discret de
-la tagline puis curseur terminal subtil, auto-transition vers login/chat.
+la tagline, auto-transition vers login/chat.
 Aucune couleur en dur : tout vient des tokens du thème actif."""
 
 from __future__ import annotations
@@ -20,12 +20,10 @@ from .. import __version__, themes
 
 # --- Constantes d'animation (aucune couleur ici : viole la règle absolue) ---
 _TAGLINE = "secure · private · minimal"   # texte tapé dans la tagline
-_CURSOR = "▎"                             # curseur terminal fin et subtil
 _FADE_MS = 0.5                            # durée du fondu d'apparition du logo
 _FADE_STEPS = 12                          # trames du fondu (styles.opacity)
 _TAG_WAIT = 0.3                           # pause entre fondu et frappe
 _TAG_TICK = 0.05                          # cadence d'apparition des lettres
-_CURSOR_BLINK = 0.55                      # cadence douce du clignotement
 _AUTO_MS = 3.0                            # auto-transition (laisse le temps
                                           # de voir la séquence complète)
 
@@ -99,14 +97,12 @@ class SplashScreen(Screen):
         self._animation_started = False
         self._tagline: Static | None = None
         self._typed = 0
-        self._cursor_on = True
         # Timers de l'animation : toujours stockés, toujours arrêtés
         # explicitement (.stop()) — jamais via la valeur de retour du callback
         # (`return False` est ignoré par Textual 8.2.8).
         self._fade_timer: Timer | None = None
         self._wait_timer: Timer | None = None
         self._typing_timer: Timer | None = None
-        self._blink_timer: Timer | None = None
         self._auto_timer: Timer | None = None
 
     def compose(self) -> ComposeResult:
@@ -188,36 +184,23 @@ class SplashScreen(Screen):
         self._typing_timer = self.set_interval(_TAG_TICK, self._type_tick)
 
     @staticmethod
-    def _tagline_text(body: str, cursor_on: bool) -> Text:
-        """Tagline en $muted avec curseur terminal en fin (toujours présent,
-        rendu en couleur de fond quand il est "éteint" → largeur stable)."""
+    def _tagline_text(body: str) -> Text:
+        """Tagline en $muted, sans curseur au bout (largeur stable)."""
         spec = themes.spec()
         muted = Style(color=spec.muted)
-        text = Text(body, style=muted)
-        text.append(_CURSOR, style=muted if cursor_on else Style(color=spec.bg))
-        return text
+        return Text(body, style=muted)
 
     def _type_tick(self) -> None:
         if not self.is_mounted:
             return
         assert self._tagline is not None
         self._typed += 1
-        self._cursor_on = True
-        self._tagline.update(self._tagline_text(_TAGLINE[: self._typed], True))
+        self._tagline.update(self._tagline_text(_TAGLINE[: self._typed]))
         if self._typed < len(_TAGLINE):
             return
-        # Texte entièrement tapé : on arrête la frappe, puis on passe au
-        # clignotement du curseur — aucun relance de la chaîne.
+        # Texte entièrement tapé : la frappe s'arrête là, sans curseur —
+        # aucun relance de la chaîne.
         self._stop_timer(self._typing_timer)
-        self._blink_timer = self.set_interval(_CURSOR_BLINK, self._cursor_tick)
-
-    def _cursor_tick(self) -> None:
-        if not self.is_mounted:
-            return
-        self._cursor_on = not self._cursor_on
-        # Le curseur reste présent (largeur constante → aucun décalage du
-        # groupe) ; on le rend juste invisible via la couleur du fond.
-        self._tagline.update(self._tagline_text(_TAGLINE, self._cursor_on))
 
     def _stop_animation(self) -> None:
         """Arrête tous les timers d'animation encore actifs (guards None)."""
@@ -227,8 +210,6 @@ class SplashScreen(Screen):
             self._wait_timer.stop()
         if self._typing_timer is not None:
             self._typing_timer.stop()
-        if self._blink_timer is not None:
-            self._blink_timer.stop()
         if self._auto_timer is not None:
             self._auto_timer.stop()
 
