@@ -12,6 +12,7 @@ from textual import events
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
+from textual.timer import Timer
 from textual.widgets import Footer, Input, Label, ListItem, ListView, RichLog, Static
 
 from .. import themes
@@ -79,6 +80,8 @@ class ChatScreen(Screen):
         # changement de next_batch, pour afficher "Refresh Xs ago".
         self._last_nb: str | None = None
         self._nb_time: float | None = None
+        # Timer du statut (sync/clock) — stocké pour nettoyage sur unmount.
+        self._status_timer: Timer | None = None
 
     def compose(self) -> ComposeResult:
         with Horizontal(id="top-bar"):
@@ -112,7 +115,7 @@ class ChatScreen(Screen):
         self.client.on_invite = self._show_invite_dialog
         self.client.on_sas_request = self._show_sas_dialog
         self.client.on_send_error = self._on_send_error
-        self.set_interval(1.0, self._tick_status)
+        self._status_timer = self.set_interval(1.0, self._tick_status)
         self._tick_status()  # "syncing…" during the first sync
         await self.client.start()
         self._refresh_room_list()
@@ -120,6 +123,12 @@ class ChatScreen(Screen):
         timeline.write(
             "\n[dim]· · ·  Pick a room from the list to start chatting  · · ·[/dim]"
         )
+
+    def on_unmount(self) -> None:
+        """Arrête le timer de statut pour éviter un leak."""
+        if self._status_timer is not None:
+            self._status_timer.stop()
+            self._status_timer = None
 
     def _set_composer_enabled(self, enabled: bool) -> None:
         """Verrouille/active la saisie selon qu'un salon est ouvert ou non."""
