@@ -5,28 +5,6 @@ daily replacement for gomuks terminal / iamb.
 
 **Stack** : [`matrix-nio`](https://github.com/matrix-nio/matrix-nio) (Matrix SDK, E2EE via libolm) + [`Textual`](https://textual.textualize.io/) (modern TUI framework).
 
-## Migrating from `matui`?
-
-If you already used the client under its former name `matui`, your session
-(credentials, keyring secrets, E2EE store) lives under the old technical
-identifiers and must be migrated once:
-
-```bash
-# 1. Copie ~/.config/matui -> ~/.config/nerve + réécrit les secrets
-#    keyring sous le service 'nerve' (mêmes clés/valeurs). Non destructif.
-python scripts/migrate_matui_to_nerve.py
-
-# 2. Vérifie l'état (dossiers + keyring 'matui'/'nerve')
-python scripts/migrate_matui_to_nerve.py --status
-
-# 3. Une fois la session migrée validée (nerve démarre sans re-login),
-#    purge l'ancienne identité — DESTRUCTIF
-python scripts/migrate_matui_to_nerve.py --force-delete-old
-```
-
-The script is one-shot and idempotent; it never deletes the old config or
-keyring entry without an explicit `--force-delete-old`.
-
 ## Why this instead of gomuks terminal
 
 - `matrix-nio` does *not* do cross-signing — only manual/emoji verification, device by device. This is the exact bug you hit with `/cs fetch` on gomuks (`illegal base64 data`) and it does not exist here: no broken "recovery key" flow.
@@ -85,11 +63,29 @@ nerve
 
 On first launch, a login screen asks for your homeserver, user ID and password. An `access_token` is then saved in `~/.config/nerve/credentials.json` (permissions `600`) — later launches go straight to the chat interface.
 
-Each launch starts with a minimal splash banner: `NERVE` rendered in the
-`smslant` figlet font with a theme-driven gradient (pyfiglet, no system
-`figlet`/`lolcat` needed), a discreet fade-in, a typing tagline and a subtle
-terminal cursor, then auto-advances to login or chat after ~3s (`enter` /
-`esc` to skip anytime).
+### Running from the repo (venv)
+
+Installed via `pipx`/`uv` (the install script above), `nerve` is already on
+your `PATH`. When running from a local checkout, expose it globally instead:
+
+```bash
+echo "alias nerve='/path/to/nerve/.venv/bin/nerve'" >> ~/.bashrc
+source ~/.bashrc
+```
+
+or symlink the wrapper into a directory already on your `PATH` (works in
+scripts too, not just interactive shells):
+
+```bash
+ln -s /path/to/nerve/.venv/bin/nerve ~/.local/bin/nerve
+```
+
+Each launch starts with a minimal splash banner: a fixed `NERVE` ASCII block
+art (hand-drawn, no `figlet`/`pyfiglet` dependency) revealed column-by-column
+with a theme-driven gradient (`$muted` → `$text`), a discreet typing tagline
+(`secure · private · minimal`, no cursor), then auto-advances to login or chat
+after ~3s (`enter` / `esc` to skip anytime). Small terminals adapt the layout
+(compact hint; the logo is hidden below 44 columns).
 
 ## Shortcuts (current state)
 
