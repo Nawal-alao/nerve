@@ -296,6 +296,24 @@ class NerveClient:
     def rooms(self) -> dict[str, MatrixRoom]:
         return self.client.rooms
 
+    async def room_messages(self, room_id: str, start: str | None = None, limit: int = 50):
+        """Récupère l'historique d'un salon (scrollback) via pagination.
+
+        `start` est un token de pagination : None pour les messages les plus
+        récents, ou un token `prev_batch` pour remonter plus loin dans le
+        temps. Retourne la réponse nio (`RoomMessagesResponse`) avec `.chunk`
+        (événements) et `.start`/`.end` (tokens), ou None en cas d'erreur.
+        """
+        try:
+            from nio import RoomMessagesResponse
+
+            resp = await self.client.room_messages(room_id, start=start, limit=limit)
+            if isinstance(resp, RoomMessagesResponse):
+                return resp
+            return None
+        except Exception:
+            return None
+
     async def verify_device_by_emoji(self, user_id: str, device_id: str) -> None:
         """Démarre une vérification interactive par emoji avec un appareil
         donné. Le SAS (Short Authentication String) est confirmé via

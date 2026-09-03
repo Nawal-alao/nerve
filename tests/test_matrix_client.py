@@ -167,3 +167,39 @@ async def test_send_image_missing_file() -> None:
     await nc.send_image("!r:hs", "/nonexistent/this/file.png")  # type: ignore[arg-type]
     assert reported
     assert "introuvable" in reported[0][1]
+
+
+@pytest.mark.asyncio
+async def test_room_messages_success_returns_response() -> None:
+    """room_messages() renvoie la réponse nio en cas de succès (scrollback)."""
+    nc = make_client()
+    resp = object()
+    nc.client.room_messages = AsyncMock(return_value=resp)
+    # Import du type attendu : on simule un RoomMessagesResponse pour le
+    # isinstance dans NerveClient.room_messages.
+    from nio import RoomMessagesResponse
+
+    resp = MagicMock(spec=RoomMessagesResponse)
+    resp.chunk = []
+    nc.client.room_messages = AsyncMock(return_value=resp)
+    out = await nc.room_messages("!r:hs", start="T1", limit=40)
+    assert out is resp
+    nc.client.room_messages.assert_awaited_once_with("!r:hs", start="T1", limit=40)
+
+
+@pytest.mark.asyncio
+async def test_room_messages_error_returns_none() -> None:
+    """room_messages() renvoie None si la réponse n'est pas positive."""
+    nc = make_client()
+    nc.client.room_messages = AsyncMock(return_value=MagicMock())  # pas un RoomMessagesResponse
+    out = await nc.room_messages("!r:hs", limit=40)
+    assert out is None
+
+
+@pytest.mark.asyncio
+async def test_room_messages_exception_returns_none() -> None:
+    """room_messages() revient à None si l'appel lève (réseau)."""
+    nc = make_client()
+    nc.client.room_messages = AsyncMock(side_effect=RuntimeError("offline"))
+    out = await nc.room_messages("!r:hs")
+    assert out is None

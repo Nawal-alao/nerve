@@ -28,6 +28,7 @@ from ..formatting import (
     _sender_color,
     TimelineContext,
     TimelineEntry,
+    body_mentions_user,
     format_timeline_entries,
     interval_time_gap,
 )
@@ -49,6 +50,10 @@ SYNC_LABELS = {
     "reconnecting": ("reconnecting…", "#d7a85f"),
 }
 
+# Sentinelle indiquant que tout l'historique d'un salon a déjà été chargé
+# (peut être vide tant qu'une première page n'a pas été récupérée).
+_HISTORY_END = object()
+
 
 class ChatScreen(Screen):
     """L'interface principale : salons à gauche, timeline + saisie à droite."""
@@ -58,6 +63,8 @@ class ChatScreen(Screen):
         ("ctrl+l", "focus_input", "Compose"),
         ("ctrl+k", "clear_screen", "Clear"),
         ("ctrl+d", "toggle_sidebar", "Sidebar"),
+        ("pageup", "timeline_history", "Scroll up / History"),
+        ("pagedown", "timeline_down", "Scroll down"),
     ]
 
     def __init__(self, client: NerveClient) -> None:
@@ -94,6 +101,14 @@ class ChatScreen(Screen):
         # contient la liste COMPLÈTE des utilisateurs en train de taper).
         self._typing_users: dict[str, set[str]] = {}
         self._typing_last_seen: dict[str, float] = {}
+        # Historique server (scrollback) : token de pagination par salon vers
+        # des messages PLUS vieux (None = plus rien à charger), et salons en
+        # cours de chargement (pour éviter les requêtes concurrentes).
+        self._history_token: dict[str, str | None] = {}
+        self._loading_history: set[str] = set()
+        # Dernière ligne affichée par salon (indice dans `message_log`) : sert
+        # à savoir s'il faut scroll_end lors d'un re-rendu.
+        self._at_bottom: dict[str, bool] = {}
 
     def compose(self) -> ComposeResult:
         with Horizontal(id="top-bar"):
@@ -320,25 +335,176 @@ class ChatScreen(Screen):
         title = (room.display_name or room_id) if room else room_id
         self.query_one("#room-title", Static).update(f"[bold]{escape(title)}[/bold]")
         self._refresh_room_list()
+        self._render_timeline(room_id, scroll_end=True)
+        self._refresh_sidebar()
+        self._refresh_typing_display()
+        self._set_composer_enabled(True)
+        self.query_one("#composer", Input).focus()
+        # Charger un premier lot d'historique serveur pour qu'un salon récent
+        # (ou vide côté client) montre tout de même des messages.
+        self.call_after_refresh(self._schedule_history_load)
+
+    def _render_timeline(self, room_id: str, *, scroll_end: bool = True) -> None:
+        """Re-rend toute la timeline d'un salon depuis ses entrées structurées.
+
+        Repart toujours d'un contexte de groupage neuf : l'historique stocké
+        est groupé de zéro pour un résultat cohérent (des messages ont pu
+        arriver ou du scrollback a pu être inséré en tête).
+        """
         timeline = self.query_one("#timeline", RichLog)
         timeline.clear()
         entries = self.message_log.get(room_id, [])
-        # On re-part d'un contexte de groupage neuf : l'historique stocké est
-        # re-rendu de zéro pour un groupage cohérent (des messages ont pu
-        # arriver pendant que le salon était inactif, sans mettre à jour le
-        # contexte incrémental).
         ctx = TimelineContext()
         lines, ctx = format_timeline_entries(entries, ctx, header_for=self._header_for)
         self._timeline_ctx[room_id] = ctx
         for line in lines:
             timeline.write(line)
-        # Messagerie classique : on ouvre le salon en bas (messages récents),
-        # on ne commence jamais en haut de l'historique.
-        timeline.scroll_end(animate=False)
-        self._refresh_sidebar()
-        self._refresh_typing_display()
-        self._set_composer_enabled(True)
-        self.query_one("#composer", Input).focus()
+        if scroll_end:
+            timeline.scroll_end(animate=False)
+
+    def action_timeline_down(self) -> None:
+        if not self.active_room_id:
+            return
+        timeline = self.query_one("#timeline", RichLog)
+        timeline.scroll_down(animate=False)
+
+    def action_timeline_history(self) -> None:
+        """Remonte la timeline ; en haut, charge des messages plus anciens."""
+        if not self.active_room_id:
+            return
+        timeline = self.query_one("#timeline", RichLog)
+        at_top = timeline.scroll_y <= 0
+        if at_top:
+            self._schedule_history_load()
+        else:
+            timeline.scroll_up(animate=False)
+
+    def _schedule_history_load(self) -> None:
+        room_id = self.active_room_id
+        if not room_id or room_id in self._loading_history:
+            return
+        if self._history_token.get(room_id) == _HISTORY_END:
+            return  # déjà tout chargé
+        self._loading_history.add(room_id)
+        self.run_worker(self._load_older_history(room_id), exclusive=True, group="history")
+
+    async def _load_older_history(self, room_id: str) -> None:
+        """Récupère des messages plus anciens (scrollback) et les préfixe.
+
+        À la première invocation sans token, on prend la page la plus récente
+        (start=None) ; ensuite on remonte page par page vers le passé. Les
+        entrées reçues en doublon (déjà présentes par sync) sont dédupliquées
+        par event_id. Après insertion, on re-rend et on préserve la position
+        de défilement.
+        """
+        try:
+            if not self.active_room_id or self.active_room_id != room_id:
+                return
+            token = self._history_token.get(room_id)
+            resp = await self.client.room_messages(room_id, start=token, limit=40)
+            if resp is None or not getattr(resp, "chunk", None):
+                if resp is not None:
+                    self._history_token[room_id] = _HISTORY_END
+                return
+            timeline = self.query_one("#timeline", RichLog)
+            prev_scroll = timeline.scroll_y
+            entries = self._entries_from_events(room_id, list(resp.chunk))
+            existing_ids = {e.event_id for e in self.message_log.get(room_id, [])}
+            added = [
+                e for e in entries if e.event_id and e.event_id not in existing_ids
+            ]
+            if not added:
+                # Rien de nouveau : probablement arrivé à la fin de l'historique.
+                self._history_token[room_id] = _HISTORY_END
+                return
+            current = self.message_log.get(room_id, [])
+            self.message_log[room_id] = added + current
+            self._render_timeline(room_id, scroll_end=False)
+            # Préserve la vue : le contenu pré-existant a glissé de len(added)
+            # lignes vers le bas.
+            timeline.scroll_to(
+                y=min(prev_scroll + len(added), timeline.max_scroll_y),
+                animate=False,
+            )
+            self._history_token[room_id] = (
+                getattr(resp, "end", None) or _HISTORY_END
+            )
+        finally:
+            self._loading_history.discard(room_id)
+
+    def _entries_from_events(
+        self, room_id: str, events: list
+    ) -> list[TimelineEntry]:
+        """Convertit des événements d'historique nio en TimelineEntry.
+
+        Gère les messages texte/emote/notice et les images (placeholder).
+        Retourne les entrées en ordre chronologique croissant (plus vieux
+        d'abord), prêtes à être préfixées.
+        """
+        own_id = self.client.client.user_id
+        me = self.client.client.user_id
+        from nio import (
+            RoomMessageImage,
+            RoomMessageText,
+        )
+
+        out: list[TimelineEntry] = []
+        for ev in events:
+            try:
+                raw_ts = getattr(ev, "server_timestamp", 0) or 0
+                if isinstance(ev, RoomMessageImage):
+                    filename = ev.body or "image"
+                    own = ev.sender == me
+                    out.append(
+                        TimelineEntry(
+                            sender=ev.sender,
+                            display_name=(
+                                "Vous"
+                                if own
+                                else (self._room_name(room_id, ev.sender))
+                            ),
+                            is_own=own,
+                            time_ms=raw_ts,
+                            body=f"[image: {filename}]",
+                            event_id=getattr(ev, "event_id", "") or "",
+                            msgtype="m.image",
+                            is_image=True,
+                            image_hint=filename,
+                            timestamp=_format_time(raw_ts),
+                        )
+                    )
+                elif isinstance(ev, RoomMessageText):
+                    body = getattr(ev, "body", "") or ""
+                    own = ev.sender == me
+                    out.append(
+                        TimelineEntry(
+                            sender=ev.sender,
+                            display_name=(
+                                "Vous" if own else (self._room_name(room_id, ev.sender))
+                            ),
+                            is_own=own,
+                            time_ms=raw_ts,
+                            body=_inline_markdown(body),
+                            event_id=getattr(ev, "event_id", "") or "",
+                            msgtype=getattr(ev, "msgtype", "m.text") or "m.text",
+                            has_mention=body_mentions_user(body, own_id),
+                            timestamp=_format_time(raw_ts),
+                        )
+                    )
+            except Exception:
+                continue
+        out.sort(key=lambda e: e.time_ms)
+        return out
+
+    def _room_name(self, room_id: str, sender: str) -> str:
+        """Nom d'affichage d'un expéditeur dans un salon (résolu ou brut)."""
+        room = self.client.rooms().get(room_id)
+        if room is None:
+            return sender
+        try:
+            return room.user_name(sender) or sender
+        except Exception:
+            return sender
 
     def _header_for(self, entry: TimelineEntry) -> str:
         """Markup Rich du header de bloc (› Vous / ‹ Nom)."""
@@ -771,7 +937,8 @@ class ChatScreen(Screen):
             )
 
     async def _handle_incoming_message(self, room: MatrixRoom, event: RoomMessageText) -> None:
-        own = event.sender == self.client.client.user_id
+        me = self.client.client.user_id
+        own = event.sender == me
         body = _inline_markdown(event.body)
         # On mémorise le dernier event_id du salon : la commande /react s'y
         # réfère pour poser une réaction.
@@ -783,10 +950,15 @@ class ChatScreen(Screen):
 
         entry = TimelineEntry(
             sender=event.sender,
-            display_name=room.user_name(event.sender) or event.sender,
+            display_name=(
+                "Vous" if own else (room.user_name(event.sender) or event.sender)
+            ),
             is_own=own,
             time_ms=event.server_timestamp or 0,
             body=body,
+            event_id=event.event_id or "",
+            msgtype=getattr(event, "msgtype", "m.text") or "m.text",
+            has_mention=body_mentions_user(event.body, me),
             timestamp=_format_time(event.server_timestamp),
         )
         if room.room_id != self.active_room_id:

@@ -15,6 +15,15 @@ En préparation de la 1.0.0.
   séparateur temporel (`HH:MM ────`) apparaît après ~5 min de silence. Le
   rendu est calculé au moment de l'affichage à partir d'entrées structurées,
   ce qui permet un re-rendu cohérent à l'ouverture d'un salon.
+- **Historique serveur / scrollback** : à l'ouverture d'un salon, nerve
+  charge les messages les plus récents depuis le serveur, puis remonte dans
+  le passé à chaque remontée en haut de la timeline (`PageUp`). Les
+  doublons (messages déjà reçus par sync) sont dédupliqués par `event_id`,
+  la position de défilement est préservée, et `Ctrl+K` efface le salon.
+- **Modèle de message structuré complet** : chaque entrée de timeline porte
+  désormais `event_id`, `msgtype` et `has_mention` (détection de `@user`) en
+  plus de l'expéditeur/date/heure. C'est la fondation pour la pagination,
+  la recherche, les mentions et la persistance.
 - **Rendu d'images 100 % sûr pour Textual** : plus aucune séquence
   d'échappement écrite sur `stdout` (ce qui corrompait l'écran plein écran).
   L'image est décomposée en demi-blocs Unicode colorés (truecolor) écrits

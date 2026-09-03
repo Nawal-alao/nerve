@@ -11,6 +11,7 @@ from nerve.formatting import (
     TIME_GAP_SEPARATOR_MS,
     TimelineContext,
     TimelineEntry,
+    body_mentions_user,
     format_timeline_entries,
     interval_time_gap,
 )
@@ -130,3 +131,25 @@ class TestFormatTimelineEntries:
         ctx = TimelineContext(last_sender="@b:hs", last_time_ms=100)
         lines, _ = render([entry("@a:hs", "new", time_ms=100)], ctx=ctx)
         assert lines[0] == "        HEAD(@a:hs)"
+
+
+class TestBodyMentionsUser:
+    """Tests pour body_mentions_user()."""
+
+    def test_matches_full_user_id(self) -> None:
+        assert body_mentions_user("regarde @alice:matrix.org stp", "@alice:matrix.org")
+
+    def test_matches_localpart(self) -> None:
+        assert body_mentions_user("hé @alice tu peux ?", "@alice:matrix.org")
+
+    def test_no_mention(self) -> None:
+        assert not body_mentions_user("salut tout le monde", "@alice:matrix.org")
+
+    def test_empty_body(self) -> None:
+        assert not body_mentions_user("", "@alice:matrix.org")
+
+    def test_empty_user_id(self) -> None:
+        assert not body_mentions_user("salut @alice", "")
+
+    def test_similar_partial_name_not_mentioned(self) -> None:
+        assert not body_mentions_user("parle à Alice en général", "@alice:matrix.org")

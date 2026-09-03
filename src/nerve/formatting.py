@@ -42,6 +42,9 @@ class TimelineEntry:
     is_own: bool
     time_ms: int  # timestamp serveur en millisecondes
     body: str  # corps déjà échappé + markdown inline
+    event_id: str = ""  # identifiant serveur (dédup pagination/historique)
+    msgtype: str = "m.text"  # type de message (m.text, m.emote, m.image, …)
+    has_mention: bool = False  # vrai si ce message nous mentionne (@user)
     is_image: bool = False
     image_hint: str = ""  # ex. nom de fichier pour le placeholder
     timestamp: str = field(default="")  # "HH:MM" pré-calculé
@@ -63,6 +66,24 @@ class TimelineContext:
 def interval_time_gap(prev_ms: int, curr_ms: int) -> bool:
     """Vrai si le silence entre deux messages dépasse le seuil (5 min)."""
     return (curr_ms - prev_ms) >= TIME_GAP_SEPARATOR_MS
+
+
+def body_mentions_user(body: str, user_id: str) -> bool:
+    """Vrai si le corps du message mentionne explicitement `user_id`.
+
+    Reconnaît à la fois l'identifiant complet (`@local:serveur`) et le
+    localpart simple (`@local`). Fonction pure, testée.
+    """
+    if not body or not user_id:
+        return False
+    full = user_id.strip()
+    if "@" not in full:
+        return False
+    localpart = full.split(":", 1)[0]
+    for token in (full, localpart):
+        if token in body:
+            return True
+    return False
 
 
 def format_timeline_entries(
