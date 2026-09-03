@@ -26,6 +26,10 @@ from ..formatting import (
     _fuzzy_score,
     _inline_markdown,
     _sender_color,
+    TimelineContext,
+    TimelineEntry,
+    format_timeline_entries,
+    interval_time_gap,
 )
 from ..image_renderer import format_image_message, is_image_message, render_image
 from ..matrix_client import NerveClient
@@ -61,7 +65,10 @@ class ChatScreen(Screen):
         self.client = client
         self.active_room_id: str | None = None
         self.unread: dict[str, int] = {}
-        self.message_log: dict[str, list[str]] = {}
+        self.message_log: dict[str, list[TimelineEntry]] = {}
+        # État de groupage de la timeline par salon (dernier expéditeur /
+        # temps pour les séparateurs temporels et les blocs).
+        self._timeline_ctx: dict[str, TimelineContext] = {}
         # Dernier event_id reçu par salon : sert à la commande /react.
         self.last_event_id: dict[str, str] = {}
         # Dernière URL aperçue par salon : sert à la commande "ouvrir le lien".
@@ -99,7 +106,13 @@ class ChatScreen(Screen):
                 yield Static("ROOMS", id="room-list-header")
                 yield ListView(id="room-list")
             with Vertical(id="chat-area"):
-                yield RichLog(id="timeline", wrap=True, highlight=True, markup=True)
+                yield RichLog(
+                    id="timeline",
+                    wrap=True,
+                    highlight=True,
+                    markup=True,
+                    auto_scroll=True,
+                )
                 yield ListView(id="suggestion-list")
                 yield Static("", id="typing-status")
                 with Horizontal(id="input-bar"):
@@ -309,12 +322,32 @@ class ChatScreen(Screen):
         self._refresh_room_list()
         timeline = self.query_one("#timeline", RichLog)
         timeline.clear()
-        for line in self.message_log.get(room_id, []):
+        entries = self.message_log.get(room_id, [])
+        # On re-part d'un contexte de groupage neuf : l'historique stocké est
+        # re-rendu de zéro pour un groupage cohérent (des messages ont pu
+        # arriver pendant que le salon était inactif, sans mettre à jour le
+        # contexte incrémental).
+        ctx = TimelineContext()
+        lines, ctx = format_timeline_entries(entries, ctx, header_for=self._header_for)
+        self._timeline_ctx[room_id] = ctx
+        for line in lines:
             timeline.write(line)
+        # Messagerie classique : on ouvre le salon en bas (messages récents),
+        # on ne commence jamais en haut de l'historique.
+        timeline.scroll_end(animate=False)
         self._refresh_sidebar()
         self._refresh_typing_display()
         self._set_composer_enabled(True)
         self.query_one("#composer", Input).focus()
+
+    def _header_for(self, entry: TimelineEntry) -> str:
+        """Markup Rich du header de bloc (› Vous / ‹ Nom)."""
+        if entry.is_own:
+            accent = themes.accent()
+            return f"[bold][{accent}]› Vous[/{accent}][/bold]"
+        color = _sender_color(entry.sender)
+        name = escape(entry.display_name or entry.sender)
+        return f"[{color}]‹ {name}[/{color}]"
 
     def on_resize(self, event: events.Resize) -> None:
         """Largeurs progressives des sidebars selon la largeur du terminal.
@@ -701,9 +734,44 @@ class ChatScreen(Screen):
         await asyncio.sleep(0.3)
         self._refresh_room_list()
 
+    def _append_timeline_entry(self, room_id: str, entry: TimelineEntry) -> None:
+        """Stoque une entrée et la rend incrémentalement si le salon est actif.
+
+        Le groupage (blocs / séparateurs temporels) est calculé au rendu via
+        le contexte persistant du salon : cohérent avec le re-rendu complet
+        à l'ouverture du salon et O(1) amorti en temps réel.
+        """
+        self.message_log.setdefault(room_id, []).append(entry)
+        if room_id != self.active_room_id:
+            return
+        ctx = self._timeline_ctx.get(room_id, TimelineContext())
+        lines, ctx = format_timeline_entries([entry], ctx, header_for=self._header_for)
+        self._timeline_ctx[room_id] = ctx
+        timeline = self.query_one("#timeline", RichLog)
+        for line in lines:
+            timeline.write(line)
+
+    def _notify_incoming(
+        self,
+        room: MatrixRoom,
+        entry: TimelineEntry,
+        body: str,
+    ) -> None:
+        """Incrémente le non-lu et notifie le desktop si nécessaire.
+
+        Appelé uniquement quand le message arrive dans un salon inactif.
+        """
+        self.unread[room.room_id] = self.unread.get(room.room_id, 0) + 1
+        self._refresh_room_list()
+        if not entry.is_own:
+            notify(
+                room.display_name or room.name or room.room_id,
+                entry.display_name or entry.sender,
+                body,
+            )
+
     async def _handle_incoming_message(self, room: MatrixRoom, event: RoomMessageText) -> None:
         own = event.sender == self.client.client.user_id
-        timestamp = _format_time(event.server_timestamp)
         body = _inline_markdown(event.body)
         # On mémorise le dernier event_id du salon : la commande /react s'y
         # réfère pour poser une réaction.
@@ -712,33 +780,20 @@ class ChatScreen(Screen):
         m = _URL_RE.search(event.body)
         if m:
             self.last_link[room.room_id] = m.group(0)
-        if own:
-            accent = themes.accent()
-            line = (
-                f"[dim]{timestamp}[/dim] "
-                f"[bold][{accent}]› Vous[/{accent}][/bold]  {body}"
-            )
-        else:
-            name = escape(room.user_name(event.sender) or event.sender)
-            color = _sender_color(event.sender)
-            line = f"[dim]{timestamp}[/dim] [{color}]{name}[/{color}]  {body}"
 
-        # On garde toujours le message en mémoire, qu'il arrive pendant
-        # que le salon est actif ou non : il pourra être réaffiché à
-        # l'ouverture du salon.
-        self.message_log.setdefault(room.room_id, []).append(line)
-
+        entry = TimelineEntry(
+            sender=event.sender,
+            display_name=room.user_name(event.sender) or event.sender,
+            is_own=own,
+            time_ms=event.server_timestamp or 0,
+            body=body,
+            timestamp=_format_time(event.server_timestamp),
+        )
         if room.room_id != self.active_room_id:
-            self.unread[room.room_id] = self.unread.get(room.room_id, 0) + 1
-            self._refresh_room_list()
-            if not own:
-                notify(
-                    room.display_name or room.name or room_id,
-                    room.user_name(event.sender) or event.sender,
-                    event.body,
-                )
+            self._notify_incoming(room, entry, event.body)
+            self._append_timeline_entry(room.room_id, entry)
             return
-        self.query_one("#timeline", RichLog).write(line)
+        self._append_timeline_entry(room.room_id, entry)
 
     async def _handle_incoming_image(
         self, room: MatrixRoom, event: "RoomMessageImage"
@@ -747,7 +802,6 @@ class ChatScreen(Screen):
         from nio import RoomMessageImage
 
         own = event.sender == self.client.client.user_id
-        timestamp = _format_time(event.server_timestamp)
         sender_name = (
             "Vous" if own else (room.user_name(event.sender) or event.sender)
         )
@@ -762,27 +816,24 @@ class ChatScreen(Screen):
             if not image_url and "file" in content:
                 image_url = content["file"].get("url", "")
 
-        line = f"[dim]{timestamp}[/dim] [bold]{escape(sender_name)}[/bold] [image: {escape(filename)}]"
-
-        # Stocker en mémoire
-        self.message_log.setdefault(room.room_id, []).append(line)
-
+        entry = TimelineEntry(
+            sender=event.sender,
+            display_name=sender_name,
+            is_own=own,
+            time_ms=event.server_timestamp or 0,
+            body=f"[image: {escape(filename)}]",
+            timestamp=_format_time(event.server_timestamp),
+            is_image=True,
+            image_hint=filename,
+        )
         if room.room_id != self.active_room_id:
-            self.unread[room.room_id] = self.unread.get(room.room_id, 0) + 1
-            self._refresh_room_list()
-            if not own:
-                notify(
-                    room.display_name or room.name or room_id,
-                    sender_name,
-                    f"[image: {filename}]",
-                )
+            self._notify_incoming(room, entry, f"[image: {filename}]")
+            self._append_timeline_entry(room.room_id, entry)
             return
+        self._append_timeline_entry(room.room_id, entry)
 
-        # Afficher dans la timeline
-        timeline = self.query_one("#timeline", RichLog)
-        timeline.write(line)
-
-        # Tenter d'afficher l'image inline si URL disponible
+        # Tenter d'afficher l'image inline si URL disponible ET si on est
+        # dans le salon actif.
         if image_url:
             result = format_image_message(
                 sender_name,
@@ -791,6 +842,7 @@ class ChatScreen(Screen):
                 self.client.creds.access_token,
                 self.client.creds.homeserver,
             )
+            timeline = self.query_one("#timeline", RichLog)
             if is_image_message(result):
                 # Extraire le chemin et afficher
                 parts = result.split(":", 2)
@@ -804,9 +856,9 @@ class ChatScreen(Screen):
                         sys.stdout.write(img_result.decode("latin-1"))
                         sys.stdout.flush()
                     else:
-                        timeline.write(f"  {img_result}")
+                        timeline.write(f"        {img_result}")
             elif result:
-                timeline.write(f"  {result}")
+                timeline.write(f"        {result}")
 
     async def _show_invite_dialog(
         self, room_id: str, room: MatrixRoom, inviter: str
@@ -835,6 +887,7 @@ class ChatScreen(Screen):
             self.app.notify("Pick a room first")
             return
         self.message_log.pop(self.active_room_id, None)
+        self._timeline_ctx.pop(self.active_room_id, None)
         self.unread[self.active_room_id] = 0
         self.query_one("#timeline", RichLog).clear()
         self._refresh_room_list()

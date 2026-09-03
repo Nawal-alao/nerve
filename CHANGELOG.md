@@ -9,6 +9,12 @@ respecte [SemVer](https://semver.org/).
 En préparation de la 1.0.0.
 
 ### Added
+- **Timeline conversationnelle groupée** : les messages consécutifs du même
+  expéditeur sont regroupés en blocs avec un seul indicateur `› Vous` /
+  `‹ Nom` (au lieu d'un nom répété à chaque ligne, façon journal système). Un
+  séparateur temporel (`HH:MM ────`) apparaît après ~5 min de silence. Le
+  rendu est calculé au moment de l'affichage à partir d'entrées structurées,
+  ce qui permet un re-rendu cohérent à l'ouverture d'un salon.
 - Reconnexion automatique avec backoff exponentiel (1s → 30s) sur panne réseau :
   l'app se re-synchronise toute seule au lieu de rester "off-line". Nouvel état
   `reconnecting…` dans le header et la sidebar.

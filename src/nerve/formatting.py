@@ -11,11 +11,107 @@ from __future__ import annotations
 
 import hashlib
 import re
+from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Callable
 
 from rich.markup import escape
 
 from . import themes
+
+# ---------------------------------------------------------------------------
+# Timeline conversationnelle
+# ---------------------------------------------------------------------------
+
+# Un séparateur temporel (ligne + heure) sépare deux messages du même salon
+# quand le silence entre eux dépasse ce seuil.
+TIME_GAP_SEPARATOR_MS = 5 * 60 * 1000
+
+
+@dataclass
+class TimelineEntry:
+    """Un message de la timeline, sous forme structurée.
+
+    Le rendu (groupage par expéditeur, séparateurs temporels) est calculé à
+    l'affichage, pas stocké : c'est ce qui permet une conversation groupée
+    au lieu d'un journal répétitif.
+    """
+
+    sender: str  # user_id complet (@alice:hs)
+    display_name: str  # nom d'affichage résolu (pour le header du bloc)
+    is_own: bool
+    time_ms: int  # timestamp serveur en millisecondes
+    body: str  # corps déjà échappé + markdown inline
+    is_image: bool = False
+    image_hint: str = ""  # ex. nom de fichier pour le placeholder
+    timestamp: str = field(default="")  # "HH:MM" pré-calculé
+
+
+@dataclass
+class TimelineContext:
+    """État de groupage en cours pour un salon.
+
+    `last_sender`/`last_time_ms` reflètent la dernière entrée rendue : ils
+    servent à décider si la prochaine entrée continue le bloc courant, ouvre
+    un nouveau bloc, ou nécessite un séparateur temporel.
+    """
+
+    last_sender: str | None = None
+    last_time_ms: int = 0
+
+
+def interval_time_gap(prev_ms: int, curr_ms: int) -> bool:
+    """Vrai si le silence entre deux messages dépasse le seuil (5 min)."""
+    return (curr_ms - prev_ms) >= TIME_GAP_SEPARATOR_MS
+
+
+def format_timeline_entries(
+    entries: list[TimelineEntry],
+    ctx: TimelineContext,
+    *,
+    header_for: Callable[[TimelineEntry], str],
+) -> tuple[list[str], TimelineContext]:
+    """Convertit une liste d'entrées en lignes Rich groupées en blocs.
+
+    Applique les règles (dans l'ordre) :
+      - nouveau salon (ctx vide) → ouvre un bloc (header) + première ligne ;
+      - silence > seuil → séparateur temporel, puis header + ligne ;
+      - même expéditeur consécutif → simple ligne indentée (continuation) ;
+      - expéditeur différent → header + ligne.
+
+    `header_for` est un callable(entry) → markup Rich du header de bloc
+    (ex. "› Vous" ou "‹ Alice"), fourni par l'appelant car il dépend du thème
+    et des couleurs de sender.
+
+    Retourne (lignes, contexte_final) : le contexte final s'applique à la
+    suite de la liste, pour permettre un rendu incrémental cohérent avec le
+    rendu complet.
+    """
+    out: list[str] = []
+    indent = "        "
+    for e in entries:
+        if ctx.last_sender is None:
+            # Début : on ouvre un bloc.
+            out.append(f"{indent}{header_for(e)}")
+            out.append(f"{indent}{e.body}")
+        elif interval_time_gap(ctx.last_time_ms, e.time_ms):
+            # Silence trop long : séparateur temporel puis nouveau bloc.
+            ts = f"{e.timestamp} " if e.timestamp else ""
+            out.append("")
+            out.append(f"[dim]{ts}{'─' * 36}[/dim]")
+            out.append(f"{indent}{header_for(e)}")
+            out.append(f"{indent}{e.body}")
+        elif e.sender == ctx.last_sender:
+            # Même expéditeur, pas de silence : on continue le bloc.
+            out.append(f"{indent}{e.body}")
+        else:
+            # Changement d'expéditeur : nouvel indicateur de bloc.
+            out.append(f"{indent}{header_for(e)}")
+            out.append(f"{indent}{e.body}")
+        ctx.last_sender = e.sender
+        ctx.last_time_ms = e.time_ms
+    return out, ctx
+
 
 # ---------------------------------------------------------------------------
 # Aides de rendu (timeline)
