@@ -45,8 +45,12 @@ Prefer not to `curl | sh`? Do the equivalent steps yourself:
 #    Arch:    sudo pacman -S --noconfirm libolm
 
 # 2. Install pipx (or use `uv tool install` if you already use uv)
-python3 -m pip install --user pipx
-python3 -m pipx ensurepath
+#    Debian 11+/Ubuntu 23.04+ block global pip (PEP 668), so use the package manager:
+#    Debian/Ubuntu:  sudo apt-get install -y pipx
+#    Fedora:         sudo dnf install -y pipx
+#    Arch:           sudo pacman -S --noconfirm python-pipx
+#    macOS:          brew install pipx
+#    (or, legacy:    python3 -m pip install --user pipx && python3 -m pipx ensurepath)
 
 # 3. Install Nerve
 pipx install git+https://github.com/Nawal-alao/nerve.git

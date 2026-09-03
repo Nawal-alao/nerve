@@ -208,6 +208,33 @@ LOCAL_BIN="$HOME/.local/bin"
 PATH="$LOCAL_BIN:$PATH"
 export PATH
 
+# Sur Linux, Debian 11+ (et la plupart des distros) bloque les installations
+# pip globales via PEP 668 (« externally-managed-environment »). pipx via le
+# gestionnaire de paquets contourne ce blocage proprement. macOS utilise pipx
+# binaire officiel (aucun sudo requis).
+install_pipx() {
+    if [ "$OS_FAMILY" = "macos" ]; then
+        echo "  ${_YELLOW}Installation de pipx via Homebrew (aucun sudo requis)…${_RESET}"
+        brew install pipx
+    else
+        echo "  ${_YELLOW}Installation de pipx via le gestionnaire de paquets (sudo requis)…${_RESET}"
+        # pipx est shipé par plusieurs distros ; on passe par l'utilitaire d'archives
+        # quel que soit le gestionnaire, en essayant de façon idempotente.
+        if command_exists apt-get; then
+            sudo apt-get install -y pipx
+        elif command_exists dnf; then
+            sudo dnf install -y pipx
+        elif command_exists pacman; then
+            sudo pacman -S --noconfirm python-pipx
+        else
+            die "pipx absent et aucun gestionnaire connu : installe pipx manuellement (https://pipx.pypa.io/)."
+        fi
+    fi
+    if command_exists pipx; then
+        pipx ensurepath >/dev/null 2>&1 || true
+    fi
+}
+
 INSTALLER=""
 if command_exists uv; then
     INSTALLER="uv"
@@ -217,10 +244,12 @@ elif command_exists pipx; then
     info "pipx déjà présent : OK"
 else
     INSTALLER="pipx"
-    echo "  ${_YELLOW}Installation de pipx (python3 -m pip install --user pipx)…${_RESET}"
-    python3 -m pip install --user pipx
-    python3 -m pipx ensurepath
-    info "pipx installé"
+    install_pipx
+    if command_exists pipx; then
+        info "pipx installé"
+    else
+        die "pipx n'a pas pu être installé : relance le script après avoir installé pipx manuellement."
+    fi
 fi
 
 # ---------------------------------------------------------------------------
