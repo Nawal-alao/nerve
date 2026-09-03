@@ -256,6 +256,11 @@ class ChatScreen(Screen):
     def action_toggle_sidebar(self) -> None:
         self.query_one("#sidebar").display = not self.query_one("#sidebar").display
 
+    @staticmethod
+    def _unread_badge(count: int) -> str:
+        """Libellé du badge de non-lu : '1'…'99', plafonné à '99+'."""
+        return "99+" if count > 99 else str(count)
+
     def _refresh_room_list(self) -> None:
         room_list = self.query_one("#room-list", ListView)
         room_list.clear()
@@ -281,7 +286,7 @@ class ChatScreen(Screen):
             if unread:
                 row = Horizontal(
                     name_label,
-                    Label(str(unread), classes="room-badge"),
+                    Label(self._unread_badge(unread), classes="room-badge"),
                     classes="room-row",
                 )
             else:

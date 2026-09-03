@@ -97,3 +97,19 @@ def test_all_rooms_prefers_alias() -> None:
     rooms = sc._all_rooms()
     # Trit par nom d'affichage : Room A avant Room B
     assert rooms == [("#alias:hs", "Room A"), ("!b:hs", "Room B")]
+
+
+# ----------------------------------------------------------------------
+# Badge de non-lu (plafonné à 99+)
+# ----------------------------------------------------------------------
+def test_unread_badge_small() -> None:
+    assert ChatScreen._unread_badge(1) == "1"
+
+
+def test_unread_badge_large_capped() -> None:
+    assert ChatScreen._unread_badge(100) == "99+"
+    assert ChatScreen._unread_badge(500) == "99+"
+
+
+def test_unread_badge_boundary_99() -> None:
+    assert ChatScreen._unread_badge(99) == "99"
