@@ -32,6 +32,7 @@ SENDER_COLORS = [
 _CODE_SPAN = re.compile(r"`([^`\n]+?)`")
 _BOLD_SPAN = re.compile(r"\*\*([^*\n]+?)\*\*")
 _ITALIC_SPAN = re.compile(r"(?<!\*)\*([^*\n]+?)\*(?!\*)")
+_STRIKE_SPAN = re.compile(r"~~([^~\n]+?)~~")
 _URL_RE = re.compile(r"https?://[^\s<>\"']+|www\.[^\s<>\"']+")
 
 
@@ -44,11 +45,16 @@ def _inline_markdown(body: str) -> str:
     """Convertit le markdown inline le plus courant en markup Rich.
 
     Le corps est d'abord échappé (les crochets restent littéraux) puis on
-    réinjecte du markup pour le code, le gras et l'italique.
+    réinjecte du markup pour le code, le gras, l'italique et le barré.
     """
     text = escape(body)
     code = themes.accent()
+    # Ordre : le code d'abord (le plus spécifique, délimité par des backticks
+    # peu ambigus), puis le barré, le gras et enfin l'italique — pour éviter
+    # qu'un motif ne se chevauche, chaque passe cible uniquement le texte
+    # restant (délimiteurs `**`, `~~`, `*` non consécutifs).
     text = _CODE_SPAN.sub(lambda m: f"[{code}]{m.group(1)}[/{code}]", text)
+    text = _STRIKE_SPAN.sub(r"[strike]\1[/strike]", text)
     text = _BOLD_SPAN.sub(r"[bold]\1[/bold]", text)
     text = _ITALIC_SPAN.sub(r"[italic]\1[/italic]", text)
     return text

@@ -149,7 +149,7 @@ means appending an entry to `src/nerve/themes.py`.
 - Centered card login screen (branding, button, styled errors)
 - Top status bar: active room, sync indicator (offline / syncing… / online) and clock
 - Room list sorted (unread first), with unread badge and highlighted active room
-- Timeline: timestamps, stable per-sender colors, highlighted own messages, inline markdown rendering (bold, italic, code)
+- Timeline: timestamps, stable per-sender colors, highlighted own messages, inline markdown rendering (bold, italic, code, strikethrough), inline image previews (Kitty/Sixel graphics protocol)
 - Slash commands in the composer: `/me <text>` (italic action line), `/react <emoji>` (react to the last message), `/join <#alias>`, `/sendimg <path>` (send an image from disk, encrypted like E2EE messages), `/recovery` (show or regenerate the E2EE session recovery key), `/theme`, `/quit [goodbye]`, `/help`. Type `/` to open a **fuzzy-search autocompletion** (fzf-like): navigate with ↑/↓, Tab or Enter completes, Esc closes. Type `@` (room members) or `#` (rooms) for the same fuzzy **mention completion**, also confirmed with Tab/Enter (your own user is excluded). An unknown or malformed command shows an error and is never sent as a message.
 - Palette fully driven by `app.tcss` (design tokens at the top of the file; theme-driven values).
 

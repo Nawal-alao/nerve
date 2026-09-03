@@ -61,6 +61,17 @@ class TestInlineMarkdown:
         result = _inline_markdown("just plain text")
         assert "just plain text" in result
 
+    def test_strikethrough_markdown(self) -> None:
+        result = _inline_markdown("~~gone~~")
+        assert "gone" in result
+        assert "[strike]" in result
+
+    def test_combined_inline_styles(self) -> None:
+        result = _inline_markdown("**bold** and *italic* and ~~strike~~")
+        assert "[bold]" in result
+        assert "[italic]" in result
+        assert "[strike]" in result
+
 
 class TestFormatTime:
     """Tests pour _format_time."""
