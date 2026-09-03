@@ -55,7 +55,8 @@ class NerveClient:
     on_invite: InviteHandler | None = None
     on_sas_request: SasRequestHandler | None = None
     on_send_error: SendErrorHandler | None = None
-    # État exposé à l'UI (header) : connecting → syncing → online/offline.
+    # État exposé à l'UI (header) :
+    #   connecting → syncing → online | offline / reconnecting (backoff).
     sync_state: str = field(init=False, default="connecting")
 
     def __post_init__(self) -> None:
@@ -82,6 +83,7 @@ class NerveClient:
         self.client.add_to_device_callback(
             self._handle_verification, (KeyVerificationEvent,)
         )
+        self._ever_connected = False
 
     # ------------------------------------------------------------------
     # Connexion
@@ -128,14 +130,47 @@ class NerveClient:
         self.sync_state = "syncing"
         await self.client.sync(timeout=30000, full_state=True)
         self.sync_state = "online"
+        self._ever_connected = True
         self._sync_task = asyncio.create_task(self._run_sync_forever())
 
     async def _run_sync_forever(self) -> None:
-        """Boucle de sync en tâche de fond, surveillée pour le header."""
-        try:
-            await self.client.sync_forever(timeout=30000, full_state=False)
-        finally:
-            self.sync_state = "offline"
+        """Boucle de sync en tâche de fond, avec reconnexion automatique.
+
+        matrix-nio ne se reconnecte pas tout seul sur une panne réseau : un
+        appel `sync()` qui lève (timeout réseau, 5xx, 429, connexion perdue)
+        ferait tomber la tâche et laisser l'app "offline" pour toujours.
+        Ici on ré-essaie avec un backoff exponentiel (1s → 30s max) et on
+        repasse à zéro dès qu'un sync aboutit.
+        """
+        next_batch = getattr(self.client, "next_batch", None)
+        delay = 1.0
+        MAX_BACKOFF = 30.0
+        while True:
+            try:
+                self.sync_state = "syncing"
+                await self.client.sync(
+                    timeout=30000,
+                    full_state=next_batch is None,
+                )
+                next_batch = getattr(self.client, "next_batch", None)
+                self.sync_state = "online"
+                self._ever_connected = True
+                delay = 1.0  # succès : on remet l'horloge de backoff à zéro
+                # Laisse le champ libre à l'event loop entre deux itérations :
+                # évite une boucle serrée si le serveur répond instantanément.
+                await asyncio.sleep(0)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                # Panne réseau / serveur : on signale l'état puis on attend.
+                # "reconnecting" si on était déjà en ligne (backoff en cours),
+                # sinon "offline" (jamais connecté au démarrage).
+                if self._ever_connected:
+                    self.sync_state = "reconnecting"
+                else:
+                    self.sync_state = "offline"
+                await asyncio.sleep(delay)
+                delay = min(delay * 2, MAX_BACKOFF)
 
     async def stop(self) -> None:
         if self._sync_task is not None:

@@ -22,6 +22,8 @@ def _sidebar_sync_parts(sync_state: str) -> tuple[str, str]:
         return "online", themes.success()
     if sync_state == "syncing":
         return "syncing…", themes.warning()
+    if sync_state == "reconnecting":
+        return "reconnecting…", themes.warning()
     if sync_state == "connecting":
         return "connecting", themes.muted()
     return "off-line", themes.error()

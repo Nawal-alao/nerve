@@ -42,6 +42,7 @@ SYNC_LABELS = {
     "syncing": ("syncing…", "#d7a85f"),
     "online": ("online", "#88c285"),
     "offline": ("off-line", "#ff6f6f"),
+    "reconnecting": ("reconnecting…", "#d7a85f"),
 }
 
 

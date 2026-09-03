@@ -156,6 +156,7 @@ means appending an entry to `src/nerve/themes.py`.
 ## What already works
 
 - Login + continuous sync loop
+- **Automatic reconnection with exponential backoff** (1s → 30s): on a network outage the app re-syncs on its own instead of dropping to "off-line" forever. The header shows `syncing…` / `online` / `off-line` / `reconnecting…`
 - Room list, live timeline, message sending
 - Receiving/decrypting encrypted messages (E2EE)
 - Device verification by emoji (SAS) **with human confirmation**: the emojis are displayed on screen and the device is only validated if you compare them yourself (never auto-confirmed).
