@@ -32,3 +32,17 @@ jobs:
       - name: Verify imports
         run: |
           python -c "from nerve.app import NerveApp; print('Import OK')"
+
+      - name: Build package and verify wheel contents
+        run: |
+          python -m pip install build
+          python -m build
+          python - <<'PY'
+          import zipfile, glob
+          wheel = glob.glob("dist/*.whl")
+          assert wheel, "no wheel built"
+          with zipfile.ZipFile(wheel[0]) as z:
+              names = z.namelist()
+          assert any(n.endswith("app.tcss") for n in names), "app.tcss missing from wheel"
+          print("Wheel contains app.tcss: OK")
+          PY

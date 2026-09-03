@@ -2,7 +2,35 @@
 name = "nerve"
 version = "0.2.0"
 description = "Un client Matrix TUI premium, en Python, basé sur matrix-nio + Textual."
+readme = "README.md"
+license = { text = "MIT" }
 requires-python = ">=3.10"
+authors = [
+    { name = "Nawal-alao", email = "Nawalalao33@gmail.com" },
+]
+keywords = [
+    "matrix",
+    "matrix-client",
+    "tui",
+    "terminal",
+    "chat",
+    "e2ee",
+    "textual",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Communications :: Chat",
+]
 dependencies = [
     "matrix-nio[e2e]>=0.25.2",
     "textual>=0.60.0",
@@ -11,10 +39,16 @@ dependencies = [
     "cryptography>=42.0.0",
 ]
 
+[project.urls]
+Homepage = "https://github.com/Nawal-alao/nerve"
+Repository = "https://github.com/Nawal-alao/nerve"
+"Bug Tracker" = "https://github.com/Nawal-alao/nerve/issues"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
+    "build>=1.2.0",
 ]
 
 [project.scripts]
