@@ -1,83 +1,25 @@
-"""Rendu inline des images dans le terminal.
+"""Rendu inline des images dans nerve.
 
-Détecte les messages m.image et les affiche via :
-- Protocole graphics Kitty (Kitty, WezTerm, ghostty)
-- Sixel (XTerm, mlterm, WezTerm, foot, Alacritty, Konsole)
+Affiche les messages m.image de façon totalement sûre pour Textual : l'image
+est décomposée en demi-blocs Unicode (▀) colorés en vraie couleur (truecolor),
+écrits comme de simples lignes de texte dans le RichLog — aucune séquence
+d'échappement brute sur stdout qui corromprait l'écran plein écran.
 
-Fallback : affiche un placeholder [image: nom] si le terminal ne supporte
-aucun protocole.
+Ce rendu fonctionne sur tout terminal supportant la vraie couleur (24 bits),
+ce qui inclut la grande majorité des terminaux modernes.
+
+Fallback : affiche un placeholder [image: nom] si le décodage d'image
+(Pillow) n'est pas disponible.
 """
 
 from __future__ import annotations
 
 import base64
-import os
-import struct
-import sys
-import tempfile
 from pathlib import Path
 
 from .config import CONFIG_DIR
 
-# Terminaux supportant le protocole graphics Kitty
-_KITTY_TERMINALS = ("kitty", "wezterm", "ghostty")
-
-# Terminaux supportant Sixel
-_SIXEL_TERMINALS = ("xterm", "mlterm", "foot", "alacritty", "konsole", "wezterm")
-
 _images_dir = CONFIG_DIR / "images"
-
-
-def _detect_terminal() -> str:
-    """Détecte le type de terminal pour choisir le protocole."""
-    term_program = os.environ.get("TERM_PROGRAM", "").lower()
-    term = os.environ.get("TERM", "").lower()
-    # Vérifier TERM_PROGRAM d'abord (plus fiable)
-    if term_program in _KITTY_TERMINALS:
-        return "kitty"
-    if "kitty" in term:
-        return "kitty"
-    # Vérifier le support Kitty via KITTY_WINDOW_ID
-    if os.environ.get("KITTY_WINDOW_ID"):
-        return "kitty"
-    # Vérifier WezTerm
-    if os.environ.get("WEZTERM_EXECUTABLE") or term_program == "wezterm":
-        return "kitty"  # WezTerm supporte le protocole Kitty
-    # Vérifier ghostty
-    if term_program == "ghostty" or "ghostty" in term:
-        return "kitty"
-    # Vérifier Sixel
-    if "xterm" in term or term_program == "iterm.app":
-        # iTerm2 supporte Sixel via certaines versions
-        return "sixel"
-    if "mlterm" in term:
-        return "sixel"
-    if "foot" in term:
-        return "sixel"
-    if "alacritty" in term:
-        # Alacritty ne supporte PAS Sixel nativement (au moment de l'écriture)
-        return "none"
-    if "konsole" in term:
-        return "sixel"
-    return "none"
-
-
-# Cache du protocole détecté
-_protocol: str | None = None
-
-
-def get_protocol() -> str:
-    """Renvoie le protocole détecté : 'kitty', 'sixel' ou 'none'."""
-    global _protocol
-    if _protocol is None:
-        _protocol = _detect_terminal()
-    return _protocol
-
-
-def reset_cache() -> None:
-    """Réinitialise le cache (pour les tests)."""
-    global _protocol
-    _protocol = None
 
 
 def download_image(mxc_url: str, access_token: str, homeserver: str) -> Path | None:
@@ -136,83 +78,81 @@ def _guess_extension(path: str) -> str:
     return ".png"  # Défaut
 
 
-def render_image_kitty(image_path: str | Path, max_width: int = 80) -> bytes:
-    """Génère les séquences d'échappement Kitty pour afficher une image.
+def render_image_placeholder(filename: str) -> str:
+    """Génère un placeholder simple et lisible quand le rendu inline échoue."""
+    name = Path(filename).name or "image"
+    return f"📷 [dim]Image · {name}[/dim]"
 
-    Utilise le transfert en base64 chunké du protocole graphics Kitty.
+
+def _has_pillow() -> bool:
+    """Vrai si Pillow est disponible pour décoder les images."""
+    try:
+        import PIL  # noqa: F401
+
+        return True
+    except Exception:
+        return False
+
+
+def _rgb_hex(r: int, g: int, b: int) -> str:
+    """Convertit des composantes RGB en code couleur hexadécimal Rich."""
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
+def render_image_textual(image_path: str | Path, max_width_cols: int = 40) -> str | None:
+    """Affiche une image en demi-blocs Unicode colorés (▀), sûr pour Textual.
+
+    Chaque cellule terminal affiche 2 rangées d'image : le pixel du haut est
+    la couleur de premier plan, celui du bas la couleur d'arrière-plan, via
+    le caractère demi-bloc supérieur ▀. Le résultat est une simple chaîne de
+    markup Rich, sans séquences d'échappement sur stdout.
+
+    Renvoie None si Pillow est absent, le fichier est illisible ou l'image
+    est invalide.
     """
+    if not _has_pillow():
+        return None
     path = Path(image_path)
     if not path.exists():
-        return b""
-
-    data = path.read_bytes()
-    encoded = base64.b64encode(data)
-
-    # Chunk size (Kitty recommande <= 4096)
-    chunk_size = 4096
-    chunks = [encoded[i : i + chunk_size] for i in range(0, len(encoded), chunk_size)]
-
-    out = bytearray()
-    # a=T (transmission directe), f=100 (PNG), t=d (disque)
-    # On utilise le mode streaming avec m=1 pour les chunks intermédiaires
-    for i, chunk in enumerate(chunks):
-        is_last = i == len(chunks) - 1
-        m = 0 if is_last else 1
-        header = f"\x1b_Ga=T,m={m};".encode()
-        out.extend(header)
-        out.extend(chunk)
-        out.extend(b"\x1b\\")
-
-    # Afficher avec contrôle : placement à la position curseur
-    # s=cols, v=rows (on laisse Kitty ajuster si non spécifié)
-    display_cmd = f"\x1b_Gf=100,t=d;a=T;c={max_width}\x1b\\".encode()
-    out.extend(display_cmd)
-
-    return bytes(out)
-
-
-def render_image_sixel(image_path: str | Path, max_width: int = 640) -> bytes:
-    """Tente de générer une image Sixel.
-
-    Nécessite img2sixel (libsixel) installé. Retourne un placeholder si
-    l'outil n'est pas disponible.
-    """
-    import shutil
-    import subprocess
-
-    if not shutil.which("img2sixel"):
-        return b""
-
+        return None
     try:
-        result = subprocess.run(
-            ["img2sixel", "-w", str(max_width), str(image_path)],
-            capture_output=True,
-            timeout=10,
-        )
-        if result.returncode == 0:
-            return result.stdout
+        from PIL import Image
+
+        img = Image.open(path).convert("RGB")
     except Exception:
-        pass
-    return b""
+        return None
+
+    width, height = img.size
+    if width <= 0 or height <= 0 or max_width_cols <= 0:
+        return None
+
+    scale = max_width_cols / width
+    new_w = max(1, int(width * scale))
+    new_h = max(1, int(height * scale))
+    img = img.resize((new_w, new_h), Image.LANCZOS)
+    px = img.load()
+
+    lines = []
+    for row in range(0, new_h, 2):
+        cells = []
+        bottom_row = min(row + 1, new_h - 1)
+        for col in range(new_w):
+            tr, tg, tb = px[col, row][:3]
+            br, bg, bb = px[col, bottom_row][:3]
+            cells.append(f"[{_rgb_hex(tr, tg, tb)} on {_rgb_hex(br, bg, bb)}]▀[/]")
+        lines.append("".join(cells))
+    return "\n".join(lines)
 
 
-def render_image_placeholder(filename: str) -> str:
-    """Génère un placeholder textuel quand le terminal ne supporte pas les images."""
-    return f"[image: {filename}]"
+def render_image(image_path: str | Path, max_width_cols: int = 40) -> str:
+    """Rend une image en texte TrueColor sûr pour Textual.
 
-
-def render_image(image_path: str | Path, max_width: int = 640) -> bytes | str:
-    """Affiche une image selon le protocole supporté par le terminal.
-
-    Retourne :
-    - bytes : séquences d'échappement à écrire sur stdout
-    - str : placeholder textuel si aucun protocole n'est supporté
+    Retourne toujours une chaîne : le rendu demi-bloc si disponible, sinon
+    un placeholder. Plus aucune sortie binaire sur stdout.
     """
-    protocol = get_protocol()
-    if protocol == "kitty":
-        return render_image_kitty(image_path, max_width)
-    if protocol == "sixel":
-        return render_image_sixel(image_path, max_width)
+    textual = render_image_textual(image_path, max_width_cols)
+    if textual is not None:
+        return textual
     return render_image_placeholder(Path(image_path).name)
 
 
@@ -225,18 +165,13 @@ def format_image_message(
 ) -> str:
     """Formate un message image pour affichage dans RichLog.
 
-    Tente de télécharger et rendre l'image. Si le terminal supporte
-    un protocole, renvoie le placeholder + l'image sera affichée via
-    une méthode spécifique. Sinon, renvoie un placeholder.
+    Télécharge l'image en cache ; si le téléchargement réussit, renvoie le
+    marqueur interne (sous forme de chemin local à rendre). Sinon, renvoie
+    un placeholder textuel.
     """
-    protocol = get_protocol()
-    if protocol == "none":
-        return f"[dim]{sender}: [image: {filename}][/image][/dim]"
-
-    # Télécharger l'image en arrière-plan
     local_path = download_image(image_url, access_token, homeserver)
     if local_path is None:
-        return f"[dim]{sender}: [image: {filename}][/dim]"
+        return f"[dim]{sender}: [image: {filename}][/image][/dim]"
 
     return f"__NERVE_IMAGE__:{local_path}:{filename}"
 

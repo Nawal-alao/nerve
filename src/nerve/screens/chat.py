@@ -833,7 +833,8 @@ class ChatScreen(Screen):
         self._append_timeline_entry(room.room_id, entry)
 
         # Tenter d'afficher l'image inline si URL disponible ET si on est
-        # dans le salon actif.
+        # dans le salon actif. Rendu toujours sûr pour Textual : aucune
+        # écriture brute sur stdout (ce qui corromprait l'écran plein écran).
         if image_url:
             result = format_image_message(
                 sender_name,
@@ -849,14 +850,7 @@ class ChatScreen(Screen):
                 if len(parts) == 3:
                     local_path = parts[1]
                     img_result = render_image(local_path)
-                    if isinstance(img_result, bytes):
-                        # Écrire directement sur le terminal
-                        import sys
-
-                        sys.stdout.write(img_result.decode("latin-1"))
-                        sys.stdout.flush()
-                    else:
-                        timeline.write(f"        {img_result}")
+                    timeline.write(f"        {img_result}")
             elif result:
                 timeline.write(f"        {result}")
 

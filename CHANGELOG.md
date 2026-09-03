@@ -15,6 +15,12 @@ En préparation de la 1.0.0.
   séparateur temporel (`HH:MM ────`) apparaît après ~5 min de silence. Le
   rendu est calculé au moment de l'affichage à partir d'entrées structurées,
   ce qui permet un re-rendu cohérent à l'ouverture d'un salon.
+- **Rendu d'images 100 % sûr pour Textual** : plus aucune séquence
+  d'échappement écrite sur `stdout` (ce qui corrompait l'écran plein écran).
+  L'image est décomposée en demi-blocs Unicode colorés (truecolor) écrits
+  dans le RichLog ; fonctionne sur tout terminal 24 bits. Fallback simple
+  `📷 Image` si Pillow est absent. Pillow devient une dépendance optionnelle
+  (`nerve[image]`).
 - Reconnexion automatique avec backoff exponentiel (1s → 30s) sur panne réseau :
   l'app se re-synchronise toute seule au lieu de rester "off-line". Nouvel état
   `reconnecting…` dans le header et la sidebar.
