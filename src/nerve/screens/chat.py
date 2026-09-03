@@ -507,14 +507,22 @@ class ChatScreen(Screen):
     # Autocomplétion des mentions @username / #room
     # ------------------------------------------------------------------
     def _active_room_users(self) -> list[tuple[str, str]]:
-        """Liste des membres du salon actif : [(user_id, display_name)]."""
+        """Liste des membres du salon actif : [(user_id, display_name)].
+
+        On exclut l'utilisateur courant : on n'a jamais besoin de se
+        mentionner soi-même (les mentions @self n'ont pas de sens dans
+        Matrix)."""
         if self.active_room_id is None:
             return []
         room = self.client.rooms().get(self.active_room_id)
         if room is None:
             return []
+        own_id = getattr(self.client, "client", None)
+        own_id = getattr(own_id, "user_id", None)
         users: list[tuple[str, str]] = []
         for uid in getattr(room, "users", {}):
+            if uid == own_id:
+                continue
             name = room.user_name(uid) or uid
             users.append((uid, name))
         users.sort(key=lambda t: t[1].lower())
@@ -656,6 +664,9 @@ class ChatScreen(Screen):
                 self._mention_index = max(self._mention_index - 1, 0)
                 lst.index = self._mention_index
                 event.stop()
+            elif event.key == "tab":
+                self._accept_mention_suggestion()
+                event.stop()
             elif event.key == "escape":
                 self._hide_mention_suggestions()
                 event.stop()
@@ -671,6 +682,9 @@ class ChatScreen(Screen):
         elif event.key == "up":
             self._suggestion_index = max(self._suggestion_index - 1, 0)
             lst.index = self._suggestion_index
+            event.stop()
+        elif event.key == "tab":
+            self._accept_suggestion()
             event.stop()
         elif event.key == "escape":
             self._hide_suggestions()
