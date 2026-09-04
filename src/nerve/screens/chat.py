@@ -30,6 +30,7 @@ from ..formatting import (
     TimelineEntry,
     body_mentions_user,
     format_timeline_entries,
+    highlight_mentions,
     interval_time_gap,
 )
 from ..image_renderer import format_image_message, is_image_message, render_image
@@ -72,6 +73,9 @@ class ChatScreen(Screen):
         self.client = client
         self.active_room_id: str | None = None
         self.unread: dict[str, int] = {}
+        # Mentions directes non lues par salon (message @nous, non lu) : sert
+        # à afficher un indicateur distinct ('@') dans la liste des salons.
+        self.mentions: dict[str, int] = {}
         self.message_log: dict[str, list[TimelineEntry]] = {}
         # État de groupage de la timeline par salon (dernier expéditeur /
         # temps pour les séparateurs temporels et les blocs).
@@ -303,20 +307,24 @@ class ChatScreen(Screen):
         for room_id, room in ordered:
             name = room.display_name or room_id
             unread = self.unread.get(room_id, 0)
+            mentions = self.mentions.get(room_id, 0) > 0
             is_active = room_id == self.active_room_id
-            if unread and not is_active:
+            has_notif = (unread or mentions) and not is_active
+            if has_notif:
                 name_label = Label(
                     f"[bold][{accent}]{escape(name)}[/{accent}][/bold]",
                     classes="room-name",
                 )
             else:
                 name_label = Label(escape(name), classes="room-name")
-            if unread:
-                row = Horizontal(
-                    name_label,
-                    Label(self._unread_badge(unread), classes="room-badge"),
-                    classes="room-row",
-                )
+            if mentions:
+                badge = Label("@", classes="room-badge mention")
+            elif unread:
+                badge = Label(self._unread_badge(unread), classes="room-badge")
+            else:
+                badge = None
+            if badge is not None:
+                row = Horizontal(name_label, badge, classes="room-row")
             else:
                 row = Horizontal(name_label, classes="room-row")
             item = ListItem(row)
@@ -331,6 +339,7 @@ class ChatScreen(Screen):
             return
         self.active_room_id = room_id
         self.unread[room_id] = 0
+        self.mentions[room_id] = 0
         room = self.client.rooms().get(room_id)
         title = (room.display_name or room_id) if room else room_id
         self.query_one("#room-title", Static).update(f"[bold]{escape(title)}[/bold]")
@@ -484,7 +493,7 @@ class ChatScreen(Screen):
                             ),
                             is_own=own,
                             time_ms=raw_ts,
-                            body=_inline_markdown(body),
+                            body=highlight_mentions(_inline_markdown(body), own_id),
                             event_id=getattr(ev, "event_id", "") or "",
                             msgtype=getattr(ev, "msgtype", "m.text") or "m.text",
                             has_mention=body_mentions_user(body, own_id),
@@ -928,18 +937,21 @@ class ChatScreen(Screen):
         Appelé uniquement quand le message arrive dans un salon inactif.
         """
         self.unread[room.room_id] = self.unread.get(room.room_id, 0) + 1
+        if entry.has_mention and not entry.is_own:
+            self.mentions[room.room_id] = self.mentions.get(room.room_id, 0) + 1
         self._refresh_room_list()
         if not entry.is_own:
+            prefix = "@Mention · " if entry.has_mention else ""
             notify(
                 room.display_name or room.name or room.room_id,
-                entry.display_name or entry.sender,
+                f"{prefix}{entry.display_name or entry.sender}",
                 body,
             )
 
     async def _handle_incoming_message(self, room: MatrixRoom, event: RoomMessageText) -> None:
         me = self.client.client.user_id
         own = event.sender == me
-        body = _inline_markdown(event.body)
+        body = highlight_mentions(_inline_markdown(event.body), me)
         # On mémorise le dernier event_id du salon : la commande /react s'y
         # réfère pour poser une réaction.
         self.last_event_id[room.room_id] = event.event_id

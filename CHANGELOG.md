@@ -24,6 +24,12 @@ En préparation de la 1.0.0.
   désormais `event_id`, `msgtype` et `has_mention` (détection de `@user`) en
   plus de l'expéditeur/date/heure. C'est la fondation pour la pagination,
   la recherche, les mentions et la persistance.
+- **Mentions directes mises en évidence** : un message vous mentionnant
+  (`@vous` ou `@vous:serveur`) voit sa mention affichée en gras et en couleur
+  d'accent dans la timeline, et le salon affiche un indicateur `@` distinct
+  dans la liste des salons tant que la mention n'est pas lue (les
+  notifications desktop sont alors préfixées `@Mention ·`). Détection sûre,
+  sans faux positifs (`@bob2`, `@bob:autre`).
 - **Rendu d'images 100 % sûr pour Textual** : plus aucune séquence
   d'échappement écrite sur `stdout` (ce qui corrompait l'écran plein écran).
   L'image est décomposée en demi-blocs Unicode colorés (truecolor) écrits

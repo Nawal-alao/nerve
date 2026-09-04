@@ -177,6 +177,30 @@ def _inline_markdown(body: str) -> str:
     return text
 
 
+def highlight_mentions(markup: str, user_id: str) -> str:
+    """Enveloppe les mentions de `user_id` dans un markup accent fort.
+
+    À appeler APRÈS `_inline_markdown` : le corps est déjà échappé, les
+    mentions `@localpart` ou `@local:serveur` sont donc repérables telles
+    quelles. On évite les faux positifs : une mention partielle (`@bob2`)
+    ou un identifiant différent (`@bob:autre`) n'est pas touchée.
+    """
+    if not user_id or "@" not in user_id:
+        return markup
+    localpart = user_id.split(":", 1)[0]
+    accent = themes.accent()
+    full = re.escape(user_id)
+    bare = re.escape(localpart)
+
+    def _repl(m: re.Match) -> str:
+        return f"[bold][{accent}]{m.group(0)}[/{accent}][/bold]"
+
+    # `localpart` contient déjà le '@' (ex. "@alice") ; on le cherche tel quel,
+    # en excluant les faux positifs `@bob2` / `@bob:autre`.
+    pattern = rf"({full})|({bare}(?![:\w]))"
+    return re.sub(pattern, _repl, markup)
+
+
 def _format_time(timestamp_ms: int | None) -> str:
     if not timestamp_ms:
         return ""

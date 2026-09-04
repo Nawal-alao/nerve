@@ -13,6 +13,7 @@ from nerve.formatting import (
     TimelineEntry,
     body_mentions_user,
     format_timeline_entries,
+    highlight_mentions,
     interval_time_gap,
 )
 
@@ -153,3 +154,41 @@ class TestBodyMentionsUser:
 
     def test_similar_partial_name_not_mentioned(self) -> None:
         assert not body_mentions_user("parle à Alice en général", "@alice:matrix.org")
+
+
+class TestHighlightMentions:
+    """Tests pour highlight_mentions() : mise en évidence des mentions."""
+
+    @staticmethod
+    def _accent() -> str:
+        from nerve import themes
+
+        return themes.accent()
+
+    def test_full_user_id_highlighted(self) -> None:
+        a = self._accent()
+        out = highlight_mentions("bonjour @alice:matrix.org !", "@alice:matrix.org")
+        assert f"[bold][{a}]@alice:matrix.org[/{a}][/bold]" in out
+
+    def test_localpart_highlighted(self) -> None:
+        a = self._accent()
+        out = highlight_mentions("hé @alice tu peux ?", "@alice:matrix.org")
+        assert f"[bold][{a}]@alice[/{a}][/bold]" in out
+
+    def test_ignored_when_no_user_id(self) -> None:
+        assert highlight_mentions("@alice", "") == "@alice"
+
+    def test_ignored_when_no_mention(self) -> None:
+        assert highlight_mentions("juste du texte", "@alice:matrix.org") == "juste du texte"
+
+    def test_partial_name_not_highlighted(self) -> None:
+        a = self._accent()
+        out = highlight_mentions("@alice2 vient", "@alice:matrix.org")
+        assert "@alice2" in out
+        assert f"[{a}]@alice2" not in out
+
+    def test_other_server_not_highlighted(self) -> None:
+        a = self._accent()
+        out = highlight_mentions("@alice:autreserveur ici", "@alice:matrix.org")
+        assert f"[{a}]@alice:autreserveur" not in out
+        assert "@alice:autreserveur" in out

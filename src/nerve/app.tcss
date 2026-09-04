@@ -339,6 +339,12 @@ ToastRack {
     text-wrap: nowrap;
 }
 
+#room-list .room-badge.mention {
+    color: $accent;
+    text-style: bold;
+    text-wrap: nowrap;
+}
+
 /* Survol/sélection : uniquement une variation de luminosité. */
 #room-list ListItem.active {
     background: $hover;
