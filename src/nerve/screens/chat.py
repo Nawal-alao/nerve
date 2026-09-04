@@ -627,7 +627,7 @@ class ChatScreen(Screen):
         "/search <text>": "search the local message history",
         "/quit [farewell]": "leave the room (optional farewell message)",
         "/recovery": "show or regenerate the E2EE session recovery key",
-        "/theme": "switch theme (OpenCode Zen / Matrix Green / Matugen)",
+        "/theme": "switch theme (OpenCode Zen / Matrix Green)",
         "/help": "show this help",
     }
     # Commandes canoniques (sans usage) pour la complétion fuzzy.
