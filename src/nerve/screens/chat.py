@@ -21,6 +21,7 @@ from ..config import recovery_has_verifier
 from ..dialogs.invite import InviteDialog
 from ..dialogs.recovery import RecoveryDialog
 from ..dialogs.sas import SasDialog
+from ..dialogs.search import SearchDialog
 from ..formatting import (
     _URL_RE,
     _format_time,
@@ -65,6 +66,7 @@ class ChatScreen(Screen):
         ("ctrl+l", "focus_input", "Compose"),
         ("ctrl+k", "clear_screen", "Clear"),
         ("ctrl+d", "toggle_sidebar", "Sidebar"),
+        ("ctrl+f", "search", "Search"),
         ("pageup", "timeline_history", "Scroll up / History"),
         ("pagedown", "timeline_down", "Scroll down"),
     ]
@@ -381,6 +383,37 @@ class ChatScreen(Screen):
         if scroll_end:
             timeline.scroll_end(animate=False)
 
+    def open_message(self, room_id: str, event_id: str) -> None:
+        """Ouvre un salon et se positionne sur un message précis.
+
+        Utilisé par la recherche : bascule sur le salon, restaure son
+        historique depuis le cache, puis défile jusqu'à l'emplacement de la
+        cible (approximé par son rang dans le log — chaque entrée rend au
+        moins une ligne).
+        """
+        self.active_room_id = room_id
+        self.unread[room_id] = 0
+        self.mentions[room_id] = 0
+        if room_id not in self.message_log:
+            self.message_log[room_id] = self._cache.load_entries(room_id)
+        room = self.client.rooms().get(room_id)
+        title = (room.display_name or room_id) if room else room_id
+        self.query_one("#room-title", Static).update(f"[bold]{escape(title)}[/bold]")
+        self._refresh_room_list()
+        self._render_timeline(room_id, scroll_end=False)
+        entries = self.message_log.get(room_id, [])
+        idx = next(
+            (i for i, e in enumerate(entries) if e.event_id == event_id),
+            len(entries) - 1,
+        )
+        timeline = self.query_one("#timeline", RichLog)
+        timeline.scroll_to(y=min(max(0, idx), timeline.max_scroll_y), animate=False)
+        self._refresh_sidebar()
+        self._refresh_typing_display()
+        self._set_composer_enabled(True)
+        self.query_one("#composer", Input).focus()
+        self.call_after_refresh(self._schedule_history_load)
+
     def action_timeline_down(self) -> None:
         if not self.active_room_id:
             return
@@ -591,6 +624,7 @@ class ChatScreen(Screen):
         "/react <emoji>": "react to the last received message",
         "/join <#alias>": "join a room by alias",
         "/sendimg <path>": "send an image from disk",
+        "/search <text>": "search the local message history",
         "/quit [farewell]": "leave the room (optional farewell message)",
         "/recovery": "show or regenerate the E2EE session recovery key",
         "/theme": "switch theme (OpenCode Zen / Matrix Green)",
@@ -603,6 +637,7 @@ class ChatScreen(Screen):
         "/react": "react to the last message",
         "/join": "join a room",
         "/sendimg": "send an image",
+        "/search": "search local history",
         "/quit": "leave the room",
         "/recovery": "session recovery key",
         "/theme": "switch theme",
@@ -643,6 +678,8 @@ class ChatScreen(Screen):
                 self.app.notify("/sendimg <path>: provide a file path", severity="error")
                 return
             await self.client.send_image(room_id, arg)
+        elif cmd == "/search":
+            self.app.push_screen(SearchDialog(self, initial_query=arg))  # type: ignore[attr-defined]
         elif cmd == "/quit":
             await self.client.part_room(room_id, arg or None)
             self.active_room_id = None
@@ -1083,6 +1120,10 @@ class ChatScreen(Screen):
         self.query_one("#timeline", RichLog).clear()
         self._refresh_room_list()
         self.app.notify("Timeline cleared")
+
+    def action_search(self) -> None:
+        """Ouvre la recherche locale de messages."""
+        self.app.push_screen(SearchDialog(self))
 
     def action_mark_read(self) -> None:
         if self.active_room_id is None:

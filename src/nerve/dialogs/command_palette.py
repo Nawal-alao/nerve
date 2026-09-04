@@ -19,6 +19,7 @@ from .. import themes
 from ..screens.chat import ChatScreen
 from .join_room import JoinRoomDialog
 from .recovery import RecoveryDialog
+from .search import SearchDialog
 
 
 class CommandEntry(NamedTuple):
@@ -81,6 +82,15 @@ COMMANDS: list[CommandEntry] = [
         "",
         "Chat",
         icon="✎",
+    ),
+    CommandEntry(
+        "search",
+        "Search messages",
+        "Find a message in your local history",
+        "ctrl+f",
+        "Chat",
+        icon="✎",
+        suggested=True,
     ),
     CommandEntry(
         "join_room",
@@ -403,6 +413,8 @@ class CommandPalette(ModalScreen[None]):
                 chat.action_insert_slash("/sendimg ")
             elif cmd_id == "join_room":
                 await app.push_screen(JoinRoomDialog(chat))
+            elif cmd_id == "search":
+                await app.push_screen(SearchDialog(chat))
             elif cmd_id == "recovery":
                 await app.push_screen(RecoveryDialog(chat))
             elif cmd_id == "switch_account":

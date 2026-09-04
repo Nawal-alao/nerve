@@ -36,6 +36,11 @@ En préparation de la 1.0.0.
   instantanément depuis le cache avant même que le serveur ne réponde ; la
   re-déduplication par `event_id` évite les doublons. `Ctrl+K` purge aussi le
   cache du salon.
+- **Recherche locale de messages** (`Ctrl+F`, `/search`, palette « Search
+  messages ») : un modal de recherche parcourt l'historique en cache des
+  salons, insensible à la casse, et affiche les correspondances (salon +
+  extrait + heure). Sélectionner un résultat ouvre le salon et positionne la
+  timeline sur le message.
 - **Rendu d'images 100 % sûr pour Textual** : plus aucune séquence
   d'échappement écrite sur `stdout` (ce qui corrompait l'écran plein écran).
   L'image est décomposée en demi-blocs Unicode colorés (truecolor) écrits

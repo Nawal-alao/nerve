@@ -128,6 +128,46 @@ class MessageCache:
         ).fetchall()
         return [self._entry_from_row(r) for r in rows]
 
+    def search_messages(
+        self,
+        query: str,
+        room_id: str | None = None,
+        limit: int = 200,
+    ) -> list[TimelineEntry]:
+        """Recherche insensible à la casse dans le corps des messages.
+
+        `room_id` restreint la recherche à un salon (None = tous). Résultats
+        triés du plus récent au plus ancien, plafonnés à `limit`.
+        """
+        return [e for _, e in self.search_with_room(query, room_id, limit)]
+
+    def search_with_room(
+        self,
+        query: str,
+        room_id: str | None = None,
+        limit: int = 200,
+    ) -> list[tuple[str, TimelineEntry]]:
+        """Comme `search_messages`, mais renvoie aussi le salon de chaque hit.
+
+        Chaque élément est `(room_id, entry)`, ce qui permet d'afficher le nom
+        du salon et de naviguer vers le message (recherche multi-salons).
+        """
+        q = query.strip()
+        if not q:
+            return []
+        sql = (
+            "SELECT room_id, " + ", ".join(_EVENT_COLUMNS)
+            + " FROM messages WHERE user_id=? AND LOWER(body) LIKE LOWER(?)"
+        )
+        params: list[str] = [self.user_id, f"%{q}%"]
+        if room_id:
+            sql += " AND room_id=?"
+            params.append(room_id)
+        sql += " ORDER BY time_ms DESC LIMIT ?"
+        params.append(str(limit))
+        rows = self._conn.execute(sql, params).fetchall()
+        return [(r["room_id"], self._entry_from_row(r)) for r in rows]
+
     @staticmethod
     def _entry_from_row(r: sqlite3.Row) -> TimelineEntry:
         return TimelineEntry(
