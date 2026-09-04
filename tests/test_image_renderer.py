@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import patch
 
-from nerve.image_renderer import (
+from neurite.image_renderer import (
     _guess_extension,
     _has_pillow,
     _rgb_hex,
@@ -40,7 +40,7 @@ class TestIsImageMessage:
     """Tests pour is_image_message()."""
 
     def test_detects_marker(self) -> None:
-        assert is_image_message("__NERVE_IMAGE__:/path/to/img.png") is True
+        assert is_image_message("__NEURITE_IMAGE__:/path/to/img.png") is True
 
     def test_rejects_plain_text(self) -> None:
         assert is_image_message("hello world") is False
@@ -94,11 +94,11 @@ class TestRenderImageTextual:
     """Tests pour render_image_textual()."""
 
     def test_none_when_pillow_missing(self) -> None:
-        with patch("nerve.image_renderer._has_pillow", return_value=False):
+        with patch("neurite.image_renderer._has_pillow", return_value=False):
             assert render_image_textual("/tmp/whatever.png") is None
 
     def test_none_when_file_missing(self) -> None:
-        with patch("nerve.image_renderer._has_pillow", return_value=True):
+        with patch("neurite.image_renderer._has_pillow", return_value=True):
             assert render_image_textual("/tmp/does-not-exist.png") is None
 
 
@@ -110,7 +110,7 @@ class TestRenderImage:
         assert isinstance(result, str)
 
     def test_falls_back_to_placeholder(self) -> None:
-        with patch("nerve.image_renderer.render_image_textual", return_value=None):
+        with patch("neurite.image_renderer.render_image_textual", return_value=None):
             result = render_image("/tmp/missing.png")
             assert "missing.png" in result
 
@@ -171,7 +171,7 @@ class TestFormatImageMessage:
     """Tests pour format_image_message()."""
 
     def test_returns_placeholder_when_download_fails(self) -> None:
-        with patch("nerve.image_renderer.download_image", return_value=None):
+        with patch("neurite.image_renderer.download_image", return_value=None):
             result = format_image_message(
                 "Alice",
                 "mxc://server/abc123",
@@ -184,7 +184,7 @@ class TestFormatImageMessage:
 
     def test_returns_marker_when_download_succeeds(self) -> None:
         with patch(
-            "nerve.image_renderer.download_image", return_value=Path("/tmp/img.png")
+            "neurite.image_renderer.download_image", return_value=Path("/tmp/img.png")
         ):
             result = format_image_message(
                 "Alice",
@@ -193,4 +193,4 @@ class TestFormatImageMessage:
                 "token",
                 "https://matrix.org",
             )
-            assert result.startswith("__NERVE_IMAGE__:")
+            assert result.startswith("__NEURITE_IMAGE__:")

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from nerve.formatting import (
+from neurite.formatting import (
     _CODE_SPAN,
     _URL_RE,
     _BOLD_SPAN,

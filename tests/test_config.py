@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from nerve.config import normalize_recovery_key
+from neurite.config import normalize_recovery_key
 
 
 class TestNormalizeRecoveryKey:

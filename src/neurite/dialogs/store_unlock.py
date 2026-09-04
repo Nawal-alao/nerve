@@ -20,7 +20,7 @@ from ..config import (
     decrypt_store,
     remove_store,
 )
-from ..matrix_client import NerveClient
+from ..matrix_client import NeuriteClient
 from ..screens.chat import ChatScreen
 from ..screens.login import LoginScreen
 
@@ -33,7 +33,7 @@ class StoreUnlockDialog(ModalScreen[None]):
         ("escape", "cancel", "Sign out"),
     ]
 
-    def __init__(self, creds: Credentials, client: NerveClient) -> None:
+    def __init__(self, creds: Credentials, client: NeuriteClient) -> None:
         super().__init__()
         self.creds = creds
         self.client = client

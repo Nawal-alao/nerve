@@ -1,4 +1,4 @@
-"""Notifications desktop pour nerve.
+"""Notifications desktop pour neurite.
 
 Utilise `notify-send` (Linux/BSD via libnotify) pour afficher une notification
 quand un message arrive dans un salon inactif. Désactivable via la config
@@ -43,7 +43,7 @@ def notify(room_name: str, sender: str, body: str) -> None:
         subprocess.Popen(
             [
                 "notify-send",
-                "--app-name=nerve",
+                "--app-name=neurite",
                 "--category=im.received",
                 f"[{room_name}] {sender}",
                 body_clean,

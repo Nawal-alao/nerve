@@ -1,4 +1,4 @@
-"""Gestion de la configuration et des identifiants persistants de nerve."""
+"""Gestion de la configuration et des identifiants persistants de neurite."""
 
 from __future__ import annotations
 
@@ -15,14 +15,14 @@ from pathlib import Path
 import keyring
 from cryptography.fernet import Fernet, InvalidToken
 
-CONFIG_DIR = Path.home() / ".config" / "nerve"
+CONFIG_DIR = Path.home() / ".config" / "neurite"
 CREDENTIALS_FILE = CONFIG_DIR / "credentials.json"
 STORE_DIR = CONFIG_DIR / "store"
 # Vérificateur (scrypt) de la clé de récupération : permet de reconnaître la
 # clé sur une machine neuve, sans stocker la clé elle-même.
 RECOVERY_FILE = CONFIG_DIR / "recovery.json"
 
-KEYRING_SERVICE = "nerve"
+KEYRING_SERVICE = "neurite"
 # Clé du trousseau contenant le token d'accès. Le token est un secret au même
 # titre qu'un mot de passe : on le conserve dans le trousseau système, jamais
 # en clair sur le disque.
@@ -31,7 +31,7 @@ _USERNAME_ACCESS_TOKEN = "access_token"
 # Clé du trousseau contenant la clé Fernet qui chiffre le store olm au repos.
 _USERNAME_STORE_KEY = "store_key"
 # Marqueur présent uniquement quand le store est chiffré.
-STORE_ENC_MARKER = STORE_DIR / ".nerve-encrypted"
+STORE_ENC_MARKER = STORE_DIR / ".neurite-encrypted"
 
 
 class StoreLockedError(RuntimeError):
@@ -137,7 +137,7 @@ def skip_splash() -> bool:
     """Vrai si l'application doit démarrer sans l'écran de bienvenue.
 
     Option lisible dans config.json via la clé `skip_splash` (défaut :
-    désactivé). N'est pas persistée par nerve : l'utilisateur la pose
+    désactivé). N'est pas persistée par neurite : l'utilisateur la pose
     manuellement pour un lancement rapide / scripté."""
     try:
         data = json.loads(CONFIG_DIR.joinpath("config.json").read_text())
@@ -192,7 +192,7 @@ def _enc_store_is_encrypted() -> bool:
 def _enc_rotate(file: Path, transform) -> None:
     """Remplace `file` par sa version transformée, de façon atomique."""
     with tempfile.NamedTemporaryFile(
-        dir=str(STORE_DIR), prefix=".nerve-tmp-", delete=False
+        dir=str(STORE_DIR), prefix=".neurite-tmp-", delete=False
     ) as tmp:
         tmp_path = Path(tmp.name)
     try:

@@ -13,7 +13,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Static
 
 from .. import themes
-from ..matrix_client import NerveClient
+from ..matrix_client import NeuriteClient
 
 
 class SasDialog(ModalScreen[None]):
@@ -21,7 +21,7 @@ class SasDialog(ModalScreen[None]):
 
     def __init__(
         self,
-        client: NerveClient,
+        client: NeuriteClient,
         transaction_id: str,
         user_id: str,
         device_id: str,

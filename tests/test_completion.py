@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from nerve.screens.chat import ChatScreen
+from neurite.screens.chat import ChatScreen
 
 
 def make_screen(client: object | None = None) -> ChatScreen:

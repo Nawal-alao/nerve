@@ -6,8 +6,8 @@ déduplication par event_id, sans toucher au vrai répertoire de config.
 
 from __future__ import annotations
 
-from nerve.cache import MessageCache
-from nerve.formatting import TimelineEntry
+from neurite.cache import MessageCache
+from neurite.formatting import TimelineEntry
 
 
 def _entry(
@@ -147,4 +147,4 @@ class TestMessageCacheSearch:
 
 class TestMessageCacheImportable:
     def test_module_imports(self) -> None:
-        from nerve import cache  # noqa: F401
+        from neurite import cache  # noqa: F401

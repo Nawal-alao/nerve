@@ -2,12 +2,12 @@
 expéditeur + séparateurs temporels).
 
 Cible la logique pure `format_timeline_entries` / `interval_time_gap` de
-`nerve.formatting`, sans état Textual.
+`neurite.formatting`, sans état Textual.
 """
 
 from __future__ import annotations
 
-from nerve.formatting import (
+from neurite.formatting import (
     TIME_GAP_SEPARATOR_MS,
     TimelineContext,
     TimelineEntry,
@@ -161,7 +161,7 @@ class TestHighlightMentions:
 
     @staticmethod
     def _accent() -> str:
-        from nerve import themes
+        from neurite import themes
 
         return themes.accent()
 

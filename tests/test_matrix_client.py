@@ -1,7 +1,7 @@
-"""Tests d'intégration de la couche NerveClient (proto Matrix).
+"""Tests d'intégration de la couche NeuriteClient (proto Matrix).
 
 On mocke `nio.AsyncClient` (aucune connexion réseau) pour vérifier les
-comportements réels de la couche NerveClient : politique de sécurité à l'envoi,
+comportements réels de la couche NeuriteClient : politique de sécurité à l'envoi,
 propagation des événements (messages, invites, typing), et gestion des
 erreurs d'upload/send.
 """
@@ -12,21 +12,21 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from nerve.config import Credentials
-from nerve.matrix_client import NerveClient
+from neurite.config import Credentials
+from neurite.matrix_client import NeuriteClient
 
 
-def make_client(**overrides: object) -> NerveClient:
-    """Construit un NerveClient dont le AsyncClient sous-jacent est un mock."""
+def make_client(**overrides: object) -> NeuriteClient:
+    """Construit un NeuriteClient dont le AsyncClient sous-jacent est un mock."""
     creds = Credentials("hs", "@me:hs", "dev1", "token")
-    with patch("nerve.matrix_client.AsyncClient") as cls:
+    with patch("neurite.matrix_client.AsyncClient") as cls:
         inst = cls.return_value
         inst.room_send = AsyncMock()
         inst.user_id = "@me:hs"
         inst.add_event_callback = MagicMock()
         inst.add_to_device_callback = MagicMock()
         inst.rooms = {}
-        nc = NerveClient(creds)
+        nc = NeuriteClient(creds)
     for k, v in overrides.items():
         setattr(nc.client, k, v)
     return nc
@@ -176,7 +176,7 @@ async def test_room_messages_success_returns_response() -> None:
     resp = object()
     nc.client.room_messages = AsyncMock(return_value=resp)
     # Import du type attendu : on simule un RoomMessagesResponse pour le
-    # isinstance dans NerveClient.room_messages.
+    # isinstance dans NeuriteClient.room_messages.
     from nio import RoomMessagesResponse
 
     resp = MagicMock(spec=RoomMessagesResponse)

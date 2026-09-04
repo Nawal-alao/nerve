@@ -1,15 +1,15 @@
-"""Thèmes de nerve.
+"""Thèmes de neurite.
 
 Deux thèmes permutables à la volée, style OpenCode Zen :
 - "opencode"     : fond quasi noir, accent orange pâle (#e59e72), ultra-flat
 - "matrix_green" : fond vert-noir, accent vert néon (#50fa7b)
 
-Les valeurs restent exposées sous les noms de variables de nerve
+Les valeurs restent exposées sous les noms de variables de neurite
 ($bg, $pane, $surface, $primary, ...) pour que app.tcss n'en dépende pas.
 register_themes() enregistre aussi les variables standards de Textual
 ($background, $foreground, $surface, $panel, $primary, ...) dont dépendent
 les widgets internes (Input, Button, ...). Le thème actif est persisté dans
-~/.config/nerve/config.json et rechargé au démarrage.
+~/.config/neurite/config.json et rechargé au démarrage.
 """
 
 from __future__ import annotations

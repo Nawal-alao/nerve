@@ -1,4 +1,4 @@
-"""Splash screen — bannière "NERVE" en bloc ASCII fixe, dégradé de thème sobre
+"""Splash screen — bannière "NEURITE" en bloc ASCII fixe, dégradé de thème sobre
 (muted → text, lettre initiale en primary), révélation en cascade du logo,
 typage discret de la tagline, auto-transition vers login/chat.
 Aucune couleur en dur : tout vient des tokens du thème actif."""
@@ -46,22 +46,22 @@ def _to_rgb(hex_color: str) -> tuple[int, int, int] | None:
         return None
 
 
-# Bloc ASCII fixe "NERVE" (6 lignes × 44 colonnes). Il ne provient plus
+# Bloc ASCII fixe "NEURITE" (6 lignes × 48 colonnes). Il ne provient plus
 # d'une police générée (pyfiglet) : tracé à la main, bon pour les deux
-# thèmes. Fixe par nature → pas de rétrécissement sous 44 colonnes.
-_LOGO_ART = r"""███╗   ██╗███████╗██████╗ ██╗   ██╗███████╗
-████╗  ██║██╔════╝██╔══██╗██║   ██║██╔════╝
-██╔██╗ ██║█████╗  ██████╔╝██║   ██║█████╗  
-██║╚██╗██║██╔══╝  ██╔══██╗╚██╗ ██╔╝██╔══╝  
-██║ ╚████║███████╗██║  ██║ ╚████╔╝ ███████╗
-╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝  ╚═╝  ╚══════╝"""
+# thèmes. Fixe par nature → pas de rétrécissement sous 48 colonnes.
+_LOGO_ART = r"""███╗   ██╗███████╗██╗   ██╗██████╗ ██╗████████╗███████╗
+████╗  ██║██╔════╝██║   ██║██╔══██╗██║╚══██╔══╝██╔════╝
+██╔██╗ ██║█████╗  ██║   ██║██████╔╝██║   ██║   █████╗  
+██║╚██╗██║██╔══╝  ██║   ██║██╔══██╗██║   ██║   ██╔══╝  
+██║ ╚████║███████╗╚██████╔╝██║  ██║██║   ██║   ███████╗
+╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝   ╚═╝   ╚══════╝"""
 
 
 _LOGO_COLS = max(len(line) for line in _LOGO_ART.rstrip("\n").split("\n"))
 
 
 def _splash_art(reveal_cols: int | None = None) -> Text:
-    """Bannière 'NERVE' : dégradé sobre $muted → $text sur tout le logo,
+    """Bannière 'NEURITE' : dégradé sobre $muted → $text sur tout le logo,
     sans lettre accentuée.
 
     Si `reveal_cols` est fourni, les colonnes ≥ reveal_cols sont rendues en
@@ -129,7 +129,7 @@ class SplashScreen(Screen):
                 yield Static(_splash_art(0), id="splash-art")  # révélée à l'animation
                 yield Static("", id="splash-sub")  # remplie par la frappe
                 yield Static("enter   continue\nesc     skip", id="splash-hint")
-            yield Static("nerve // encrypted", id="splash-detail")
+            yield Static("neurite // encrypted", id="splash-detail")
             yield Static(f"v{__version__}", id="splash-version")
 
     def on_mount(self) -> None:

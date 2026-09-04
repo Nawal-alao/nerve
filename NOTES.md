@@ -46,7 +46,7 @@ tout retour vers `app.py`. Une fois chaque module extrait (étapes 5, 6, 11,
 que des modules "aval" (screens/, dialogs/, config/, matrix_client/) —
 aucun cycle.
 
-## Structure finale (src/nerve/)
+## Structure finale (src/neurite/)
 - `app.py` : `MatuiApp`, `_apply_theme_globals`, globals `ACCENT`/`DANGER`
   (maintenus mais sans consommateur), `run()`.
 - `formatting.py`, `sidebar.py`, `widgets.py` : helpers bas niveau, ne

@@ -1,6 +1,6 @@
-"""Interface Textual de nerve.
+"""Interface Textual de neurite.
 
-Ce module assemble l'application : `NerveApp` (app Textual principale) et
+Ce module assemble l'application : `NeuriteApp` (app Textual principale) et
 le point d'entrée `run()`. Les écrans, dialogues et helpers ont été extraits
 en modules à part (screens/, dialogs/, formatting.py, sidebar.py,
 widgets.py) — voir NOTES.md pour le détail du découpage.
@@ -18,7 +18,7 @@ from .accounts import get_manager
 from .config import Credentials, StoreLockedError, skip_splash
 from .dialogs.command_palette import CommandPalette
 from .dialogs.store_unlock import StoreUnlockDialog
-from .matrix_client import NerveClient
+from .matrix_client import NeuriteClient
 from .screens.account_picker import AccountPickerScreen
 from .screens.chat import ChatScreen
 from .screens.login import LoginScreen
@@ -28,7 +28,7 @@ from .screens.splash import SplashScreen
 # re-évaluées à chaque bascule de thème par _apply_theme_globals().
 # Après le découpage en modules, les consommateurs lisent themes.accent()
 # et themes.danger() directement (cf. NOTES.md). Les globals restent ici
-# maintenues par NerveApp mais n'ont plus d'utilisation.
+# maintenues par NeuriteApp mais n'ont plus d'utilisation.
 ACCENT = "a2d399"
 DANGER = "ffb4ab"
 
@@ -48,9 +48,9 @@ _apply_theme_globals()
 # ---------------------------------------------------------------------------
 
 
-class NerveApp(App):
+class NeuriteApp(App):
     CSS_PATH = "app.tcss"
-    TITLE = "nerve"
+    TITLE = "neurite"
     ENABLE_COMMAND_PALETTE = False
     BINDINGS = [("ctrl+p", "command_palette", "Commands")]
 
@@ -101,7 +101,7 @@ class NerveApp(App):
         self.cycle_theme()
 
     async def start_chat(self, creds: Credentials) -> None:
-        client = NerveClient(creds=creds)
+        client = NeuriteClient(creds=creds)
         try:
             client.load_local_store()
         except StoreLockedError:
@@ -112,15 +112,15 @@ class NerveApp(App):
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="nerve",
-        description="nerve — un client Matrix TUI premium en Python "
+        prog="neurite",
+        description="neurite — un client Matrix TUI premium en Python "
         "(matrix-nio + Textual).",
     )
     parser.add_argument(
         "-V",
         "--version",
         action="version",
-        version=f"nerve {__version__}",
+        version=f"neurite {__version__}",
         help="show the version and exit",
     )
     return parser
@@ -130,7 +130,7 @@ def run(argv: Sequence[str] | None = None) -> None:
     # `--version`/`-V`/`--help` sont gérés par argparse (action="version"
     # imprime et sort, sans lancer l'app Textual).
     _build_parser().parse_args(argv)
-    NerveApp().run()
+    NeuriteApp().run()
 
 
 if __name__ == "__main__":

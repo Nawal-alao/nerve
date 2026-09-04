@@ -1,4 +1,4 @@
-# nerve
+# neurite
 
 A premium Matrix TUI client, written in Python, designed as a solid
 daily replacement for gomuks terminal / iamb.
@@ -13,23 +13,23 @@ daily replacement for gomuks terminal / iamb.
 
 ## Installation
 
-Nerve requires **Linux or macOS** with **Python ≥ 3.10**. The installer
+Neurite requires **Linux or macOS** with **Python ≥ 3.10**. The installer
 checks for these, installs the `libolm` encryption dependency and `pipx`,
-then installs Nerve:
+then installs Neurite:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Nawal-alao/nerve/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/Nawal-alao/neurite/main/install.sh | sh
 ```
 
 Then verify:
 
 ```bash
-nerve --version
+neurite --version
 ```
 
 ### Windows (via WSL2)
 
-There is **no native Windows build**. On Windows, install Nerve inside
+There is **no native Windows build**. On Windows, install Neurite inside
 [WSL2](https://learn.microsoft.com/windows/wsl/install) (Ubuntu
 recommended), then run the install command above from your WSL terminal.
 
@@ -52,28 +52,28 @@ Prefer not to `curl | sh`? Do the equivalent steps yourself:
 #    macOS:          brew install pipx
 #    (or, legacy:    python3 -m pip install --user pipx && python3 -m pipx ensurepath)
 
-# 3. Install Nerve
-pipx install git+https://github.com/Nawal-alao/nerve.git
+# 3. Install Neurite
+pipx install git+https://github.com/Nawal-alao/neurite.git
 
 # 4. Verify
-nerve --version
+neurite --version
 ```
 
 ## Run
 
 ```bash
-nerve
+neurite
 ```
 
-On first launch, a login screen asks for your homeserver, user ID and password. An `access_token` is then saved in `~/.config/nerve/credentials.json` (permissions `600`) — later launches go straight to the chat interface.
+On first launch, a login screen asks for your homeserver, user ID and password. An `access_token` is then saved in `~/.config/neurite/credentials.json` (permissions `600`) — later launches go straight to the chat interface.
 
 ### Running from the repo (venv)
 
-Installed via `pipx`/`uv` (the install script above), `nerve` is already on
+Installed via `pipx`/`uv` (the install script above), `neurite` is already on
 your `PATH`. When running from a local checkout, expose it globally instead:
 
 ```bash
-echo "alias nerve='/path/to/nerve/.venv/bin/nerve'" >> ~/.bashrc
+echo "alias neurite='/path/to/neurite/.venv/bin/neurite'" >> ~/.bashrc
 source ~/.bashrc
 ```
 
@@ -81,10 +81,10 @@ or symlink the wrapper into a directory already on your `PATH` (works in
 scripts too, not just interactive shells):
 
 ```bash
-ln -s /path/to/nerve/.venv/bin/nerve ~/.local/bin/nerve
+ln -s /path/to/neurite/.venv/bin/neurite ~/.local/bin/neurite
 ```
 
-Each launch starts with a minimal splash banner: a fixed `NERVE` ASCII block
+Each launch starts with a minimal splash banner: a fixed `NEURITE` ASCII block
 art (hand-drawn, no `figlet`/`pyfiglet` dependency) revealed column-by-column
 with a theme-driven gradient (`$muted` → `$text`), a discreet typing tagline
 (`secure · private · minimal`, no cursor), then auto-advances to login or chat
@@ -116,7 +116,7 @@ Available commands:
 - Navigation : focus rooms / focus composer (suggested), toggle sidebar (`Ctrl+D`)
 - Chat : clear screen (`Ctrl+K`), mark as read, join a room (`#alias` prompt in a dialog)
 - Action : insert `/sendimg`, open the room's last link
-- System : sync status, switch theme, log out (back to login), quit nerve (`Ctrl+Q`)
+- System : sync status, switch theme, log out (back to login), quit neurite (`Ctrl+Q`)
 
 ## Sidebar (context panel)
 
@@ -139,10 +139,10 @@ command in the palette / `Ctrl+P` → System):
 - **opencode** — the default, warm dark tones (accent `#e59e72`).
 - **matrix_green** — deep green (accent `#50fa7b`).
 
-The choice is persisted in `~/.config/nerve/config.json` and re-applied at
+The choice is persisted in `~/.config/neurite/config.json` and re-applied at
 every launch (login, chat and palette all follow the active theme). All CSS
 colors in `app.tcss` come from theme variables, so adding a new theme only
-means appending an entry to `src/nerve/themes.py`.
+means appending an entry to `src/neurite/themes.py`.
 
 ## Premium interface
 
@@ -164,7 +164,7 @@ means appending an entry to `src/nerve/themes.py`.
 - **Human confirmation of invitations**: a room is never joined automatically — a dialog requires Accept/Decline.
 - Access token stored in the **system keyring**, never in plaintext in `credentials.json`.
 - **E2EE store encrypted at rest**: olm/megolm session keys are Fernet-encrypted (key in the keyring) as soon as the app closes.
-- **Session recovery key** (`/recovery`): the store key is exposed as a shareable secret so the session (E2EE history) can be restored on a new machine or after the keyring is wiped. Only a scrypt verifier of the key is stored on disk — never the key itself. On startup, if the keyring key is missing, nerve asks for the recovery key instead of failing.
+- **Session recovery key** (`/recovery`): the store key is exposed as a shareable secret so the session (E2EE history) can be restored on a new machine or after the keyring is wiped. Only a scrypt verifier of the key is stored on disk — never the key itself. On startup, if the keyring key is missing, neurite asks for the recovery key instead of failing.
 - **Command palette** (`Ctrl+P`) and **clean logout**: the token is revoked server-side, then local credentials and the store are deleted.
 
 ## Roadmap to "real" premium
@@ -175,11 +175,11 @@ In the order I'd recommend tackling it:
 2. **Desktop notifications** — via `notify-send` or a lib like `plyer`, triggered from `_handle_message` when the room isn't active.
 3. **Unread indicators** per room in the list.
 4. **Username/room completion** in the composer.
-5. **Multi-account** — `NerveClient` is already decoupled from the UI, so running several instances in parallel is possible.
+5. **Multi-account** — `NeuriteClient` is already decoupled from the UI, so running several instances in parallel is possible.
 
 ## Security — good to know
 
 - The access token and store key live in the system keyring. On systems without a keyring daemon (e.g. headless server), keyring falls back to one of the weaker backends: configure a real keyring (Secret Service / keychain) for actual protection.
-- If the store is corrupted (e.g. after a crash during end-of-session encryption), delete `~/.config/nerve/store`: devices stay valid, only non-re-synced history is lost.
-- To restore a session anywhere, run `/recovery` once and save the shown key offline. On a new machine or after the keyring is wiped, nerve will detect the encrypted store and ask for that key before loading the chat.
-- **Local message cache**: received messages are cached plaintext (permissions `600`) in `~/.config/nerve/cache/<user_id>.db` so a room re-opens instantly. It's an optional convenience cache, not encrypted like the E2EE store — delete it to clear history or if you prefer no local copy.
+- If the store is corrupted (e.g. after a crash during end-of-session encryption), delete `~/.config/neurite/store`: devices stay valid, only non-re-synced history is lost.
+- To restore a session anywhere, run `/recovery` once and save the shown key offline. On a new machine or after the keyring is wiped, neurite will detect the encrypted store and ask for that key before loading the chat.
+- **Local message cache**: received messages are cached plaintext (permissions `600`) in `~/.config/neurite/cache/<user_id>.db` so a room re-opens instantly. It's an optional convenience cache, not encrypted like the E2EE store — delete it to clear history or if you prefer no local copy.
