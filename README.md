@@ -182,3 +182,4 @@ In the order I'd recommend tackling it:
 - The access token and store key live in the system keyring. On systems without a keyring daemon (e.g. headless server), keyring falls back to one of the weaker backends: configure a real keyring (Secret Service / keychain) for actual protection.
 - If the store is corrupted (e.g. after a crash during end-of-session encryption), delete `~/.config/nerve/store`: devices stay valid, only non-re-synced history is lost.
 - To restore a session anywhere, run `/recovery` once and save the shown key offline. On a new machine or after the keyring is wiped, nerve will detect the encrypted store and ask for that key before loading the chat.
+- **Local message cache**: received messages are cached plaintext (permissions `600`) in `~/.config/nerve/cache/<user_id>.db` so a room re-opens instantly. It's an optional convenience cache, not encrypted like the E2EE store — delete it to clear history or if you prefer no local copy.

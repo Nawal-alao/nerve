@@ -16,6 +16,7 @@ from textual.timer import Timer
 from textual.widgets import Footer, Input, Label, ListItem, ListView, RichLog, Static
 
 from .. import themes
+from ..cache import MessageCache
 from ..config import recovery_has_verifier
 from ..dialogs.invite import InviteDialog
 from ..dialogs.recovery import RecoveryDialog
@@ -73,6 +74,9 @@ class ChatScreen(Screen):
         self.client = client
         self.active_room_id: str | None = None
         self.unread: dict[str, int] = {}
+        # Cache SQLite local : persiste les messages de timeline par salon,
+        # scopé au compte courant (self.client.client.user_id).
+        self._cache = MessageCache(self.client.client.user_id)
         # Mentions directes non lues par salon (message @nous, non lu) : sert
         # à afficher un indicateur distinct ('@') dans la liste des salons.
         self.mentions: dict[str, int] = {}
@@ -168,6 +172,7 @@ class ChatScreen(Screen):
         if self._status_timer is not None:
             self._status_timer.stop()
             self._status_timer = None
+        self._cache.close()
 
     def _set_composer_enabled(self, enabled: bool) -> None:
         """Verrouille/active la saisie selon qu'un salon est ouvert ou non."""
@@ -340,6 +345,11 @@ class ChatScreen(Screen):
         self.active_room_id = room_id
         self.unread[room_id] = 0
         self.mentions[room_id] = 0
+        # Si le salon n'a pas encore de contenu en mémoire cette session, on
+        # restaure ce qui a été mis en cache (affichage immédiat, offline-ish).
+        # Le scrollback serveur complètera ensuite les messages les plus récents.
+        if room_id not in self.message_log:
+            self.message_log[room_id] = self._cache.load_entries(room_id)
         room = self.client.rooms().get(room_id)
         title = (room.display_name or room_id) if room else room_id
         self.query_one("#room-title", Static).update(f"[bold]{escape(title)}[/bold]")
@@ -428,6 +438,7 @@ class ChatScreen(Screen):
                 return
             current = self.message_log.get(room_id, [])
             self.message_log[room_id] = added + current
+            self._cache.upsert_entries(room_id, added)
             self._render_timeline(room_id, scroll_end=False)
             # Préserve la vue : le contenu pré-existant a glissé de len(added)
             # lignes vers le bas.
@@ -917,6 +928,7 @@ class ChatScreen(Screen):
         à l'ouverture du salon et O(1) amorti en temps réel.
         """
         self.message_log.setdefault(room_id, []).append(entry)
+        self._cache.upsert_entries(room_id, [entry])
         if room_id != self.active_room_id:
             return
         ctx = self._timeline_ctx.get(room_id, TimelineContext())
@@ -1067,6 +1079,7 @@ class ChatScreen(Screen):
         self.message_log.pop(self.active_room_id, None)
         self._timeline_ctx.pop(self.active_room_id, None)
         self.unread[self.active_room_id] = 0
+        self._cache.clear_room(self.active_room_id)
         self.query_one("#timeline", RichLog).clear()
         self._refresh_room_list()
         self.app.notify("Timeline cleared")

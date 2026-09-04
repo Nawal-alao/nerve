@@ -30,6 +30,12 @@ En préparation de la 1.0.0.
   dans la liste des salons tant que la mention n'est pas lue (les
   notifications desktop sont alors préfixées `@Mention ·`). Détection sûre,
   sans faux positifs (`@bob2`, `@bob:autre`).
+- **Cache SQLite local** : les messages reçus (sync + scrollback) sont
+  persistés par salon et par compte dans `~/.config/nerve/cache/` (fichier en
+  0600). À la réouverture d'un salon déjà vu, l'historique s'affiche
+  instantanément depuis le cache avant même que le serveur ne réponde ; la
+  re-déduplication par `event_id` évite les doublons. `Ctrl+K` purge aussi le
+  cache du salon.
 - **Rendu d'images 100 % sûr pour Textual** : plus aucune séquence
   d'échappement écrite sur `stdout` (ce qui corrompait l'écran plein écran).
   L'image est décomposée en demi-blocs Unicode colorés (truecolor) écrits
