@@ -127,7 +127,7 @@ COMMANDS: list[CommandEntry] = [
     CommandEntry(
         "theme",
         "Switch theme",
-        "Toggle between OpenCode Zen and Matrix Green",
+        "Cycle OpenCode Zen, Matrix Green and Matugen",
         "",
         "System",
         icon="⚙",

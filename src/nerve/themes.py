@@ -1,8 +1,11 @@
 """Thèmes de nerve.
 
-Deux thèmes permutables à la volée, style OpenCode Zen :
+Trois thèmes permutables à la volée, style OpenCode Zen :
 - "opencode"     : fond quasi noir, accent orange pâle (#e59e72), ultra-flat
 - "matrix_green" : fond vert-noir, accent vert néon (#50fa7b)
+- "matugen"      : palette Material You « Matugen » (fond sombre, accent vert
+  pâle #a2d399), extraite de la config opencode de la machine — reproduit le
+  style de la palette de commande d'opencode.
 
 Les valeurs restent exposées sous les noms de variables de nerve
 ($bg, $pane, $surface, $primary, ...) pour que app.tcss n'en dépende pas.
@@ -27,7 +30,7 @@ CONFIG_FILE = CONFIG_DIR / "config.json"
 DEFAULT_NAME = "opencode"
 
 # Ordre de cycle de /theme.
-THEME_ORDER = ("opencode", "matrix_green")
+THEME_ORDER = ("opencode", "matrix_green", "matugen")
 
 
 @dataclass(frozen=True)
@@ -92,6 +95,29 @@ THEMES: dict[str, ThemeSpec] = {
         error="#ff6f6f",
         success="#50fa7b",
         modal_border="solid #2a402a",
+    ),
+    # Palette Material You « Matugen » extraite de la config opencode de la
+    # machine (matugen.json) : fond sombre, accent vert pâle, surfaces
+    # vert-gris. Reproduit le style de la palette de commande d'opencode.
+    "matugen": ThemeSpec(
+        name="matugen",
+        label="Matugen (Material You)",
+        bg="#10140f",
+        pane="#424940",
+        surface="#1b211a",
+        border="#424940",
+        hover="#252c22",
+        text="#e0e4da",
+        muted="#c2c8bd",
+        primary="#a2d399",
+        secondary="#baccb3",
+        accent="#a2d399",
+        section="#baccb3",
+        accent_text="#0c390e",
+        warning="#baccb3",
+        error="#ffb4ab",
+        success="#a2d399",
+        modal_border="solid #424940",
     ),
 }
 

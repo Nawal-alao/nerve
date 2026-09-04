@@ -41,6 +41,12 @@ En préparation de la 1.0.0.
   salons, insensible à la casse, et affiche les correspondances (salon +
   extrait + heure). Sélectionner un résultat ouvre le salon et positionne la
   timeline sur le message.
+- **Thème « Matugen »** : nouvelle palette Material You (fond sombre, accent
+  vert pâle `#a2d399`, surfaces vert-gris) extraite du `matugen.json` de la
+  configuration opencode de la machine — la palette de commande y reprend donc
+  exactement le style de celle d'opencode. Permutable avec `/theme` (qui cycle
+  désormais entre OpenCode Zen, Matrix Green et Matugen) ou la commande
+  « Switch theme » de la palette.
 - **Rendu d'images 100 % sûr pour Textual** : plus aucune séquence
   d'échappement écrite sur `stdout` (ce qui corrompait l'écran plein écran).
   L'image est décomposée en demi-blocs Unicode colorés (truecolor) écrits
