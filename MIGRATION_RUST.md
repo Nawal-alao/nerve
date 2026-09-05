@@ -1,4 +1,4 @@
-# Migration neurite → Rust
+# Migration shelltrix → Rust
 
 Plan complet de migration de l'actuel client Matrix TUI en **Python/Textual**
 vers une version **Rust/ratatui**, développée sur la branche `feature/rust`.
@@ -14,18 +14,18 @@ fonctionnelle pendant toute la migration (côté à côte sur deux branches).
 
 | Composant | Module Python | Rôle |
 |---|---|---|
-| Bootstrap | `neurite/app.py` | MatuiApp, routage splash → login → chat, boucle d'app |
-| Config | `neurite/config.py` | chemins, clés `config.json`, chiffrement du store (Fernet), clé de récupération |
-| Comptes multi | `neurite/accounts.py` | `accounts.json` + tokens dans le keyring système |
-| Couche Matrix | `neurite/matrix_client.py` | wrapper sur `matrix-nio` : login, sync, envoi, SAS, upload |
+| Bootstrap | `shelltrix/app.py` | MatuiApp, routage splash → login → chat, boucle d'app |
+| Config | `shelltrix/config.py` | chemins, clés `config.json`, chiffrement du store (Fernet), clé de récupération |
+| Comptes multi | `shelltrix/accounts.py` | `accounts.json` + tokens dans le keyring système |
+| Couche Matrix | `shelltrix/matrix_client.py` | wrapper sur `matrix-nio` : login, sync, envoi, SAS, upload |
 | Écrans | `screens/{login,splash,chat,account_picker}.py` | UI textuelle |
 | Dialogues | `dialogs/{invite,join_room,recovery,store_unlock,sas,command_palette}.py` | dialogs modaux |
-| Sidebar | `neurite/sidebar.py` | panneau contextuel droit |
-| Formatage | `neurite/formatting.py` | couleurs par émetteur, markdown inline, regex URL |
-| Thèmes | `neurite/themes.py` | tokens de couleur (opencode / matrix_green) |
-| Images | `neurite/image_renderer.py` | Kitty / Sixel / placeholder |
-| Notifications | `neurite/notifications.py` | `notify-send` |
-| Widgets | `neurite/widgets.py` | helpers UI (figlet-like banner, …) |
+| Sidebar | `shelltrix/sidebar.py` | panneau contextuel droit |
+| Formatage | `shelltrix/formatting.py` | couleurs par émetteur, markdown inline, regex URL |
+| Thèmes | `shelltrix/themes.py` | tokens de couleur (opencode / matrix_green) |
+| Images | `shelltrix/image_renderer.py` | Kitty / Sixel / placeholder |
+| Notifications | `shelltrix/notifications.py` | `notify-send` |
+| Widgets | `shelltrix/widgets.py` | helpers UI (figlet-like banner, …) |
 
 ~3 900 lignes de Python / 7 modules de tests.
 
@@ -60,7 +60,7 @@ Consignes Rust globales :
 
 ```
 crates /
-  neurite/                       # binaire principal
+  shelltrix/                       # binaire principal
     src/
       main.rs                  # bootstrap terminal, runtime tokio, App
       app.rs                   # état global de l'app (équivalent app.py)
@@ -119,7 +119,7 @@ débloque la suite.
 - **Sortie :** `cargo run` affiche une fenêtre vide qui répond au redimensionnement et à `q` pour quitter.
 
 ### Phase 1 — POC : login + sync + room list
-- `config.rs` (chemins `~/.config/neurite`), `accounts.rs` + `keyring`.
+- `config.rs` (chemins `~/.config/shelltrix`), `accounts.rs` + `keyring`.
 - `matrix/client.rs` : login par mot de passe → token + device_id.
 - Boucle `sync` (`Client::sync_stream`) + cache SQLite (`matrix-sdk-sqlite`).
 - `ui/login.rs` (saisie homeserver/user/password) + `ui/room_list.rs` (noms de salons, badges unread).
@@ -150,7 +150,7 @@ débloque la suite.
 - **Sortie :** 100 % des commandes actuelles fonctionnent, palette et autocomplétion portées.
 
 ### Phase 6 — Splash, thèmes, sidebar, confort
-- `ui/splash.rs` : bloc ASCII `NEURITE` fixe + révélation colonne par colonne + tagline typée (`tachyonfx` ou timers custom, **mêmes cadeaux**). Skip via `enter`/`esc`, auto after ~3s.
+- `ui/splash.rs` : bloc ASCII `SHELLTRIX` fixe + révélation colonne par colonne + tagline typée (`tachyonfx` ou timers custom, **mêmes cadeaux**). Skip via `enter`/`esc`, auto after ~3s.
 - `theme.rs` : tokens `opencode` / `matrix_green`, bascule `/theme`, persistance `config.json`.
 - `ui/sidebar.rs` : nom/alias, topic, compteurs (joined/invited), état E2EE, power level, état de sync + `next_batch`, âge du refresh.
 - `ui/widgets/statusbar.rs` : salle active, indicateur sync (offline/syncing…/online), horloge.
@@ -219,13 +219,13 @@ débloque la suite.
 - Branche de travail : `feature/rust` (créée).
 - Règles : `main` = version stable Python **figée** ; worktree Rust isolé.
 - Une PR par phase, format rigoriste : `cargo fmt --check` + `cargo clippy -- -D warnings` + `cargo test`.
-- Versioning : `neurite 0.3.x` (Rust) reprend le numéro après la migration complète.
+- Versioning : `shelltrix 0.3.x` (Rust) reprend le numéro après la migration complète.
 
 ---
 
 ## 8. Première étape immédiate (prochaine action)
 
-1. `cargo init` du workspace dans `/home/nawalalao/neurite` (ou sous-dossier `rust/`).
+1. `cargo init` du workspace dans `/home/nawalalao/shelltrix` (ou sous-dossier `rust/`).
 2. Ajouter `ratatui`, `crossterm`, `tokio`.
 3. « Hello TUI » : fenêtre + `q` pour quitter → **valide la Phase 0**.
 

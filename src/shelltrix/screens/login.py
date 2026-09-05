@@ -11,10 +11,10 @@ from textual.screen import Screen
 from textual.widgets import Button, Footer, Input, Label, Rule, Static
 
 from ..accounts import get_manager
-from ..matrix_client import NeuriteClient
+from ..matrix_client import ShelltrixClient
 
 if TYPE_CHECKING:
-    from ..app import NeuriteApp
+    from ..app import ShelltrixApp
 
 
 class LoginScreen(Screen):
@@ -24,7 +24,7 @@ class LoginScreen(Screen):
     def compose(self) -> ComposeResult:
         with Vertical(id="login-wrap"):
             with Vertical(id="login-card"):
-                yield Static("◆ neurite", id="brand")
+                yield Static("◆ shelltrix", id="brand")
                 yield Static(
                     "A premium Matrix client, right in your terminal.",
                     id="tagline",
@@ -49,7 +49,7 @@ class LoginScreen(Screen):
                 yield Button("Sign in", id="login-button", variant="primary")
                 yield Label("", id="login-status")
             yield Label(
-                "Your credentials stay in ~/.config/neurite (0600 permissions).",
+                "Your credentials stay in ~/.config/shelltrix (0600 permissions).",
                 id="login-hint",
             )
         yield Footer()
@@ -88,7 +88,7 @@ class LoginScreen(Screen):
         self._set_status("")
         self._set_loading(True)
         try:
-            creds = await NeuriteClient.login(homeserver, user_id, password)
+            creds = await ShelltrixClient.login(homeserver, user_id, password)
         except Exception as exc:  # noqa: BLE001 — on affiche l'erreur à l'écran
             self._set_status(f"Connection failed: {exc}", kind="error")
             self._set_loading(False)
@@ -98,5 +98,5 @@ class LoginScreen(Screen):
         creds.save()
         # Enregistrer dans le gestionnaire multi-comptes
         get_manager().add(creds)
-        app: NeuriteApp = self.app  # type: ignore[assignment]
+        app: ShelltrixApp = self.app  # type: ignore[assignment]
         await app.start_chat(creds)

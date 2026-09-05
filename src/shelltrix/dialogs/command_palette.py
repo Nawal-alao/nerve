@@ -158,7 +158,7 @@ COMMANDS: list[CommandEntry] = [
     ),
     CommandEntry(
         "quit",
-        "Quit neurite",
+        "Quit shelltrix",
         "Close the application",
         "ctrl+q",
         "System",

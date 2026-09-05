@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import pytest
 
-from neurite.accounts import (
+from shelltrix.accounts import (
     AccountInfo,
     AccountManager,
     _make_label,
@@ -74,16 +74,16 @@ class TestAccountManager:
     """Tests pour AccountManager."""
 
     def test_empty_on_creation(self, tmp_path: Path) -> None:
-        with patch("neurite.accounts.ACCOUNTS_FILE", tmp_path / "accounts.json"):
+        with patch("shelltrix.accounts.ACCOUNTS_FILE", tmp_path / "accounts.json"):
             mgr = AccountManager()
             assert mgr.count() == 0
             assert mgr.accounts == []
 
     def test_add_account(self, tmp_path: Path) -> None:
-        from neurite.config import Credentials
+        from shelltrix.config import Credentials
 
-        with patch("neurite.accounts.ACCOUNTS_FILE", tmp_path / "accounts.json"):
-            with patch("neurite.accounts.CONFIG_DIR", tmp_path):
+        with patch("shelltrix.accounts.ACCOUNTS_FILE", tmp_path / "accounts.json"):
+            with patch("shelltrix.accounts.CONFIG_DIR", tmp_path):
                 mgr = AccountManager()
                 creds = Credentials(
                     homeserver="https://matrix.org",
@@ -96,10 +96,10 @@ class TestAccountManager:
                 assert info.user_id == "@alice:matrix.org"
 
     def test_remove_account(self, tmp_path: Path) -> None:
-        from neurite.config import Credentials
+        from shelltrix.config import Credentials
 
-        with patch("neurite.accounts.ACCOUNTS_FILE", tmp_path / "accounts.json"):
-            with patch("neurite.accounts.CONFIG_DIR", tmp_path):
+        with patch("shelltrix.accounts.ACCOUNTS_FILE", tmp_path / "accounts.json"):
+            with patch("shelltrix.accounts.CONFIG_DIR", tmp_path):
                 mgr = AccountManager()
                 creds = Credentials(
                     homeserver="https://matrix.org",
@@ -113,10 +113,10 @@ class TestAccountManager:
                 assert mgr.count() == 0
 
     def test_get_by_user_id(self, tmp_path: Path) -> None:
-        from neurite.config import Credentials
+        from shelltrix.config import Credentials
 
-        with patch("neurite.accounts.ACCOUNTS_FILE", tmp_path / "accounts.json"):
-            with patch("neurite.accounts.CONFIG_DIR", tmp_path):
+        with patch("shelltrix.accounts.ACCOUNTS_FILE", tmp_path / "accounts.json"):
+            with patch("shelltrix.accounts.CONFIG_DIR", tmp_path):
                 mgr = AccountManager()
                 creds = Credentials(
                     homeserver="https://matrix.org",
@@ -130,6 +130,6 @@ class TestAccountManager:
                 assert found.user_id == "@alice:matrix.org"
 
     def test_get_nonexistent_returns_none(self, tmp_path: Path) -> None:
-        with patch("neurite.accounts.ACCOUNTS_FILE", tmp_path / "accounts.json"):
+        with patch("shelltrix.accounts.ACCOUNTS_FILE", tmp_path / "accounts.json"):
             mgr = AccountManager()
             assert mgr.get("@nobody:matrix.org") is None

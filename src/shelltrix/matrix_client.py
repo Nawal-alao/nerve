@@ -1,4 +1,4 @@
-"""Fine couche au-dessus de matrix-nio pour neurite.
+"""Fine couche au-dessus de matrix-nio pour shelltrix.
 
 Cette classe centralise tout ce qui touche au protocole Matrix : connexion,
 sync loop, envoi de messages, gestion basique du chiffrement (E2EE) et
@@ -45,7 +45,7 @@ SendErrorHandler = Callable[[str, str], Awaitable[None]]
 
 
 @dataclass
-class NeuriteClient:
+class ShelltrixClient:
     creds: Credentials
     client: AsyncClient = field(init=False)
     _sync_task: asyncio.Task | None = field(init=False, default=None)
@@ -95,7 +95,7 @@ class NeuriteClient:
         """
         store_path = str(ensure_store_dir())
         client = AsyncClient(homeserver=homeserver, user=user_id, store_path=store_path)
-        resp = await client.login(password, device_name="neurite")
+        resp = await client.login(password, device_name="shelltrix")
         if not isinstance(resp, LoginResponse):
             await client.close()
             raise RuntimeError(f"Échec de connexion : {resp}")

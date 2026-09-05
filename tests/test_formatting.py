@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from neurite.formatting import (
+from shelltrix.formatting import (
     _CODE_SPAN,
     _URL_RE,
     _BOLD_SPAN,

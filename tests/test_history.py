@@ -12,7 +12,7 @@ from unittest.mock import MagicMock
 
 from nio import RoomMessageImage, RoomMessageText
 
-from neurite.screens.chat import ChatScreen
+from shelltrix.screens.chat import ChatScreen
 
 
 class _StubRoom:
@@ -30,7 +30,7 @@ class _StubInnerClient:
 
 
 class _StubClient:
-    """Mini doublure de NeuriteClient suffisante pour _entries_from_events."""
+    """Mini doublure de ShelltrixClient suffisante pour _entries_from_events."""
 
     def __init__(self) -> None:
         self.client = _StubInnerClient("@me:hs")

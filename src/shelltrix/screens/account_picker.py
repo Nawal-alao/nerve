@@ -14,7 +14,7 @@ from textual.screen import Screen
 from textual.widgets import Button, Footer, Label, ListItem, ListView, Rule, Static
 
 from ..accounts import AccountInfo, get_manager
-from ..matrix_client import NeuriteClient
+from ..matrix_client import ShelltrixClient
 from .login import LoginScreen
 
 
@@ -30,7 +30,7 @@ class AccountPickerScreen(Screen):
     def compose(self) -> ComposeResult:
         with Vertical(id="login-wrap"):
             with Vertical(id="login-card"):
-                yield Static("◆ neurite", id="brand")
+                yield Static("◆ shelltrix", id="brand")
                 yield Static(
                     "Choose an account to sign in.",
                     id="tagline",

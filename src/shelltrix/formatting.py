@@ -1,4 +1,4 @@
-"""Formatage de texte pour l'interface neurite : timeline, markdown inline,
+"""Formatage de texte pour l'interface shelltrix : timeline, markdown inline,
 heure et correspondance floue — fonctions pures, sans état Textual.
 
 Regroupe les helpers extraits de `app.py` :

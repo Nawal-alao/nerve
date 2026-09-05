@@ -1,6 +1,6 @@
 /* =====================================================================
-   neurite — design system "premium flat", style OpenCode Zen
-   Désign tokens fournis par le thème actif (src/neurite/themes.py) :
+   shelltrix — design system "premium flat", style OpenCode Zen
+   Désign tokens fournis par le thème actif (src/shelltrix/themes.py) :
    $bg, $pane, $surface, $border, $hover, $text, $muted, $primary,
    $secondary, $accent, $section, $accent_text, $warning, $error,
    $success, $modal_border.
@@ -282,7 +282,7 @@ ToastRack {
     border-right: solid $surface;
 }
 
-/* Marque en tête de la sidebar gauche (le "neurite" du croquis).
+/* Marque en tête de la sidebar gauche (le "shelltrix" du croquis).
    hauteur 2 : 1 ligne de texte + 1 ligne de bordure inférieure. */
 #brand-sidebar {
     height: 2;
@@ -387,7 +387,7 @@ ToastRack {
     scrollbar-size: 0 0;
 }
 
-/* -- Splash screen (bannière NEURITE au lancement) ------------------------ */
+/* -- Splash screen (bannière SHELLTRIX au lancement) ------------------------ */
 /* Composition : LOGO → tagline → hint clavier, hiérarchie stricte, large
    espace négatif. #splash-wrap occupe tout l'écran : le groupe
    (#splash-group, 1fr) reste parfaitement centré sur l'écran pendant que
@@ -464,7 +464,7 @@ SplashScreen {
     display: none;
 }
 
-/* Sous ~43 colonnes le bloc ASCII fixe (43 col de large) serait coupé à
+/* Sous ~66 colonnes le bloc ASCII fixe (66 col de large) serait coupé à
    droite : on masque le logo plutôt que de casser les lettres. */
 .-splash-no-logo #splash-art {
     display: none;

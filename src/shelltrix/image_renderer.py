@@ -1,4 +1,4 @@
-"""Rendu inline des images dans neurite.
+"""Rendu inline des images dans shelltrix.
 
 Affiche les messages m.image de façon totalement sûre pour Textual : l'image
 est décomposée en demi-blocs Unicode (▀) colorés en vraie couleur (truecolor),
@@ -173,9 +173,9 @@ def format_image_message(
     if local_path is None:
         return f"[dim]{sender}: [image: {filename}][/image][/dim]"
 
-    return f"__NEURITE_IMAGE__:{local_path}:{filename}"
+    return f"__SHELLTRIX_IMAGE__:{local_path}:{filename}"
 
 
 def is_image_message(body: str) -> bool:
     """Vrai si le body contient notre marqueur d'image."""
-    return body.startswith("__NEURITE_IMAGE__:")
+    return body.startswith("__SHELLTRIX_IMAGE__:")

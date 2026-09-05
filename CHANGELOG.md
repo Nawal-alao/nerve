@@ -1,6 +1,6 @@
 # Changelog
 
-Toutes les modifications notables de neurite. Le format suit
+Toutes les modifications notables de shelltrix. Le format suit
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), et le versionnage
 respecte [SemVer](https://semver.org/).
 
@@ -15,7 +15,7 @@ En préparation de la 1.0.0.
   séparateur temporel (`HH:MM ────`) apparaît après ~5 min de silence. Le
   rendu est calculé au moment de l'affichage à partir d'entrées structurées,
   ce qui permet un re-rendu cohérent à l'ouverture d'un salon.
-- **Historique serveur / scrollback** : à l'ouverture d'un salon, neurite
+- **Historique serveur / scrollback** : à l'ouverture d'un salon, shelltrix
   charge les messages les plus récents depuis le serveur, puis remonte dans
   le passé à chaque remontée en haut de la timeline (`PageUp`). Les
   doublons (messages déjà reçus par sync) sont dédupliqués par `event_id`,
@@ -31,7 +31,7 @@ En préparation de la 1.0.0.
   notifications desktop sont alors préfixées `@Mention ·`). Détection sûre,
   sans faux positifs (`@bob2`, `@bob:autre`).
 - **Cache SQLite local** : les messages reçus (sync + scrollback) sont
-  persistés par salon et par compte dans `~/.config/neurite/cache/` (fichier en
+  persistés par salon et par compte dans `~/.config/shelltrix/cache/` (fichier en
   0600). À la réouverture d'un salon déjà vu, l'historique s'affiche
   instantanément depuis le cache avant même que le serveur ne réponde ; la
   re-déduplication par `event_id` évite les doublons. `Ctrl+K` purge aussi le
@@ -46,14 +46,14 @@ En préparation de la 1.0.0.
   L'image est décomposée en demi-blocs Unicode colorés (truecolor) écrits
   dans le RichLog ; fonctionne sur tout terminal 24 bits. Fallback simple
   `📷 Image` si Pillow est absent. Pillow devient une dépendance optionnelle
-  (`neurite[image]`).
+  (`shelltrix[image]`).
 - Reconnexion automatique avec backoff exponentiel (1s → 30s) sur panne réseau :
   l'app se re-synchronise toute seule au lieu de rester "off-line". Nouvel état
   `reconnecting…` dans le header et la sidebar.
 - Complétion par `Tab` pour les suggestions fuzzy (commandes slash, mentions
   `@user` / `#room`), en plus de `Enter`.
 - Barré inline (`~~texte~~`) dans le rendu markdown.
-- Tests d'intégration de la couche `NeuriteClient` (politique de sécurité à
+- Tests d'intégration de la couche `ShelltrixClient` (politique de sécurité à
   l'envoi, invites, typing, envoi d'images) en mockant `nio.AsyncClient`.
 - Métadonnées PyPI complètes (licence, classifieurs, URLs, keywords) et
   vérification CI du contenu du wheel (`app.tcss` présent).

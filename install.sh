@@ -1,16 +1,16 @@
 #!/bin/sh
 #
-# neurite — installateur cross-platform (Linux + macOS; Windows via WSL2).
+# shelltrix — installateur cross-platform (Linux + macOS; Windows via WSL2).
 #
 # Usage :
-#   curl -fsSL https://raw.githubusercontent.com/Nawal-alao/neurite/main/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/Nawal-alao/shelltrix/main/install.sh | sh
 #
 # Le script est idempotent : relancer sur une machine déjà configurée ne
 # casse rien (il ne réinstalle que ce qui manque). Il ne pipe jamais de
 # commande sudo sans l'annoncer explicitement à l'écran avant.
 #
-# NOTE publication PyPI : une fois neurite publié sur PyPI, remplacer
-# l'installation ci-dessous par `pipx install neurite` (et le curl du README
+# NOTE publication PyPI : une fois shelltrix publié sur PyPI, remplacer
+# l'installation ci-dessous par `pipx install shelltrix` (et le curl du README
 # par le chemin PyPI). Le `git+https://...` reste valable en attendant.
 
 set -e
@@ -35,7 +35,7 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Bannière ASCII "NEURITE" (bloc fixe, pas de police générée). La couleur est
+# Bannière ASCII "SHELLTRIX" (bloc fixe, pas de police générée). La couleur est
 # gérée par les variables ci-dessus (déjà "éteintes" hors tty) ; seule la
 # locale indique si les caractères de dessin de boîte sont sûrs à imprimer.
 # ---------------------------------------------------------------------------
@@ -48,17 +48,17 @@ banner() {
         printf '%b' "$_BOLD"
         cat <<'LOGO'
 
-███╗   ██╗███████╗██╗   ██╗██████╗ ██╗████████╗███████╗
-████╗  ██║██╔════╝██║   ██║██╔══██╗██║╚══██╔══╝██╔════╝
-██╔██╗ ██║█████╗  ██║   ██║██████╔╝██║   ██║   █████╗  
-██║╚██╗██║██╔══╝  ██║   ██║██╔══██╗██║   ██║   ██╔══╝  
-██║ ╚████║███████╗╚██████╔╝██║  ██║██║   ██║   ███████╗
-╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝   ╚═╝   ╚══════╝
+███████╗██╗  ██╗███████╗██╗     ██╗  ████████╗██████╗ ██╗██╗  ██╗
+██╔════╝██║  ██║██╔════╝██║     ██║  ╚══██╔══╝██╔══██╗██║╚██╗██╔╝
+███████╗███████║█████╗  ██║     ██║     ██║   ██████╔╝██║ ╚███╔╝ 
+╚════██║██╔══██║██╔══╝  ██║     ██║     ██║   ██╔══██╗██║ ██╔██╗ 
+███████║██║  ██║███████╗███████╗███████╗██║   ██║  ██║██║██╔╝ ██╗
+╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝   ╚═╝  ╚═╝╚═╝╚═╝  ╚═╝ 
 
 LOGO
         printf '%b\n' "$_RESET"
     else
-        printf '%b\n' "${_BOLD}NEURITE${_RESET}"
+        printf '%b\n' "${_BOLD}SHELLTRIX${_RESET}"
     fi
 }
 banner
@@ -80,7 +80,7 @@ case "$OS" in
     *)
         cat <<EOF
 
-${_RED}Neurite nécessite Linux ou macOS.${_RESET}
+${_RED}Shelltrix nécessite Linux ou macOS.${_RESET}
 
 Sur Windows, installe via WSL2 puis relance ce script depuis ton terminal
 WSL (Ubuntu de préférence) :
@@ -122,7 +122,7 @@ PY_MINOR="$(printf '%s' "$PY_VERSION" | cut -d. -f2)"
 
 if [ "$PY_MAJOR" -lt 3 ] || { [ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -lt 10 ]; }; then
     cat <<EOF
-${_RED}Python $PY_VERSION est trop ancien : neurite requiert Python >= 3.10.${_RESET}
+${_RED}Python $PY_VERSION est trop ancien : shelltrix requiert Python >= 3.10.${_RESET}
 Met à niveau Python puis relance ce script.
 EOF
     exit 1
@@ -187,10 +187,10 @@ else
         *)
             cat <<EOF
 ${_RED}Distro Linux non reconnue : installe libolm manuellement.${_RESET}
-Neurite (E2EE) a besoin de libolm. Réfère-toi aux instructions de la matrice
+Shelltrix (E2EE) a besoin de libolm. Réfère-toi aux instructions de la matrice
 de build de matrix-org/olm :
   https://github.com/matrix-org/olm
-Puis relance ce script (ou installe neurite par une autre méthode).
+Puis relance ce script (ou installe shelltrix par une autre méthode).
 EOF
             exit 1
             ;;
@@ -203,7 +203,7 @@ fi
 step "Vérification de pipx / uv"
 
 # pipx installe les scripts dans ~/.local/bin (ajouté au PATH via ensurepath).
-# On le préfixe dès maintenant pour trouver neurite juste après l'installation.
+# On le préfixe dès maintenant pour trouver shelltrix juste après l'installation.
 LOCAL_BIN="$HOME/.local/bin"
 PATH="$LOCAL_BIN:$PATH"
 export PATH
@@ -253,27 +253,27 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 5. Installation de neurite
+# 5. Installation de shelltrix
 # ---------------------------------------------------------------------------
-step "Installation de neurite"
+step "Installation de shelltrix"
 
-install_neurite() {
-    # NOTE publication PyPI : remplacer le git+https par `pipx install neurite`
-    # (ou `uv tool install neurite`) une fois le paquet publié.
+install_shelltrix() {
+    # NOTE publication PyPI : remplacer le git+https par `pipx install shelltrix`
+    # (ou `uv tool install shelltrix`) une fois le paquet publié.
     if [ "$INSTALLER" = "uv" ]; then
-        uv tool install "git+https://github.com/Nawal-alao/neurite.git"
+        uv tool install "git+https://github.com/Nawal-alao/shelltrix.git"
     else
-        pipx install "git+https://github.com/Nawal-alao/neurite.git"
+        pipx install "git+https://github.com/Nawal-alao/shelltrix.git"
     fi
 }
 
-if command_exists neurite; then
-    info "neurite déjà installé : OK"
-    NEURITE_VERSION="$(neurite --version 2>/dev/null || echo unknown)"
-    warn "neurite présent (version actuelle : $NEURITE_VERSION) — pour le mettre à jour : pipx upgrade neurite (ou uv tool upgrade neurite)."
+if command_exists shelltrix; then
+    info "shelltrix déjà installé : OK"
+    SHELLTRIX_VERSION="$(shelltrix --version 2>/dev/null || echo unknown)"
+    warn "shelltrix présent (version actuelle : $SHELLTRIX_VERSION) — pour le mettre à jour : pipx upgrade shelltrix (ou uv tool upgrade shelltrix)."
 else
-    install_neurite
-    info "neurite installé"
+    install_shelltrix
+    info "shelltrix installé"
 fi
 
 # ---------------------------------------------------------------------------
@@ -282,10 +282,10 @@ fi
 cat <<EOF
 
 ${_BOLD}Installation terminée.${_RESET}
-  • Lance neurite avec :        ${_BOLD}neurite${_RESET}
-  • Vérifie la version :      ${_BOLD}neurite --version${_RESET}
-  • Config :                  ~/.config/neurite/
-  • Si 'neurite' n'est pas trouvé, rouvre ton terminal (pipx a ajouté
+  • Lance shelltrix avec :        ${_BOLD}shelltrix${_RESET}
+  • Vérifie la version :      ${_BOLD}shelltrix --version${_RESET}
+  • Config :                  ~/.config/shelltrix/
+  • Si 'shelltrix' n'est pas trouvé, rouvre ton terminal (pipx a ajouté
     ~/.local/bin à ton PATH).
 
 EOF

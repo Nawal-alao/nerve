@@ -31,7 +31,7 @@ jobs:
 
       - name: Verify imports
         run: |
-          python -c "from neurite.app import NeuriteApp; print('Import OK')"
+          python -c "from shelltrix.app import ShelltrixApp; print('Import OK')"
 
       - name: Build package and verify wheel contents
         run: |

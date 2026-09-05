@@ -1,7 +1,7 @@
-"""Gestion multi-comptes pour neurite.
+"""Gestion multi-comptes pour shelltrix.
 
 Permet de sauvegarder plusieurs comptes Matrix et de commuter entre eux.
-Les identifiants sont stockés dans ~/.config/neurite/accounts.json (métadonnées)
+Les identifiants sont stockés dans ~/.config/shelltrix/accounts.json (métadonnées)
 et les tokens dans le keyring système.
 """
 

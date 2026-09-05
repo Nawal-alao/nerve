@@ -36,7 +36,7 @@ from ..formatting import (
     interval_time_gap,
 )
 from ..image_renderer import format_image_message, is_image_message, render_image
-from ..matrix_client import NeuriteClient
+from ..matrix_client import ShelltrixClient
 from ..notifications import notify
 from ..sidebar import _sidebar_room_markup, _sidebar_session_markup
 from ..widgets import _SendButton
@@ -71,7 +71,7 @@ class ChatScreen(Screen):
         ("pagedown", "timeline_down", "Scroll down"),
     ]
 
-    def __init__(self, client: NeuriteClient) -> None:
+    def __init__(self, client: ShelltrixClient) -> None:
         super().__init__()
         self.client = client
         self.active_room_id: str | None = None
@@ -127,7 +127,7 @@ class ChatScreen(Screen):
             yield Static("", id="clock")
         with Horizontal(id="main"):
             with Vertical(id="room-panel"):
-                yield Static("◆ neurite", id="brand-sidebar")
+                yield Static("◆ shelltrix", id="brand-sidebar")
                 yield Static("ROOMS", id="room-list-header")
                 yield ListView(id="room-list")
             with Vertical(id="chat-area"):

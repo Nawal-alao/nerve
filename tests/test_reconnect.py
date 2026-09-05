@@ -1,6 +1,6 @@
 """Tests pour la reconnexion automatique (backoff exponentiel).
 
-Vérifie le contrat du `_run_sync_forever()` de NeuriteClient : une panne
+Vérifie le contrat du `_run_sync_forever()` de ShelltrixClient : une panne
 réseau (sync() qui lève) ne doit pas faire tomber la tâche pour toujours
 — elle passe en état "offline"/"reconnecting", attend, puis retente ; un
 sync réussi repasse l'état à "online" et remet le backoff à zéro.
@@ -13,8 +13,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from neurite.config import Credentials
-from neurite.matrix_client import NeuriteClient
+from shelltrix.config import Credentials
+from shelltrix.matrix_client import ShelltrixClient
 
 
 @pytest.mark.asyncio
@@ -32,7 +32,7 @@ async def test_retries_and_recovers_after_failure() -> None:
         return object()
 
     creds = Credentials("hs", "@u:hs", "dev", "token")
-    with patch("neurite.matrix_client.AsyncClient") as mock_client_cls:
+    with patch("shelltrix.matrix_client.AsyncClient") as mock_client_cls:
         client_inst = mock_client_cls.return_value
         client_inst.sync = AsyncMock(side_effect=flaky_sync)
         client_inst.next_batch = "abc"
@@ -40,7 +40,7 @@ async def test_retries_and_recovers_after_failure() -> None:
         client_inst.add_to_device_callback = MagicMock()
         client_inst.rooms = {}
 
-        nc = NeuriteClient(creds)
+        nc = ShelltrixClient(creds)
         nc._ever_connected = True
 
         async def run() -> None:
@@ -67,13 +67,13 @@ async def test_offline_when_never_connected() -> None:
         raise ConnectionError("down")
 
     creds = Credentials("hs", "@u:hs", "dev", "token")
-    with patch("neurite.matrix_client.AsyncClient") as mock_client_cls:
+    with patch("shelltrix.matrix_client.AsyncClient") as mock_client_cls:
         client_inst = mock_client_cls.return_value
         client_inst.sync = AsyncMock(side_effect=always_fail)
         client_inst.add_event_callback = MagicMock()
         client_inst.add_to_device_callback = MagicMock()
 
-        nc = NeuriteClient(creds)
+        nc = ShelltrixClient(creds)
         nc._ever_connected = False  # jamais connecté
 
         # Premier appel direct : l'exception est avalée par la boucle.

@@ -15,7 +15,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Static
 
 from .. import themes
-from ..matrix_client import NeuriteClient
+from ..matrix_client import ShelltrixClient
 
 
 class InviteDialog(ModalScreen[None]):
@@ -23,7 +23,7 @@ class InviteDialog(ModalScreen[None]):
 
     def __init__(
         self,
-        client: NeuriteClient,
+        client: ShelltrixClient,
         room_id: str,
         room: MatrixRoom,
         inviter: str,
